@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { BookOpen, CalendarDays, ClipboardCheck, GraduationCap, Home, Library, LogOut, Menu, Settings, UserRound, Users, X } from 'lucide-react';
+import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
+import { BookOpen, CalendarDays, ClipboardCheck, GraduationCap, Home, Library, LogOut, Menu, Settings, Users, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const commonNav = [
@@ -44,19 +44,15 @@ export function Layout() {
             </NavLink>
           )}
         </nav>
-        <p className="nav-caption account-caption">Tài khoản</p>
-        <nav className="sidebar-nav">
-          <NavLink to="/profile" onClick={() => setOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}><UserRound size={19} /><span>Hồ sơ</span></NavLink>
-          <NavLink to="/settings" onClick={() => setOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}><Settings size={19} /><span>Cài đặt</span></NavLink>
-        </nav>
         <div className="role-card">
           <span className="role-pill">{profile?.role === 'teacher' ? 'Teacher' : 'Student'}</span>
           <strong>{profile?.role === 'teacher' ? 'Không gian giảng dạy' : 'Không gian học tập'}</strong>
           <p>{profile?.role === 'teacher' ? 'Tạo khóa học và theo dõi học viên.' : 'Tham gia khóa học và ghi nhớ từ vựng.'}</p>
         </div>
         <div className="sidebar-profile">
-          <div className="avatar">{profile?.display_name?.slice(0, 2).toUpperCase() || 'UV'}</div>
-          <div className="sidebar-user"><strong>{profile?.display_name || 'Người dùng'}</strong><span>{profile?.email}</span></div>
+          <Link className="avatar" to="/profile" onClick={() => setOpen(false)}>{profile?.display_name?.slice(0, 2).toUpperCase() || 'UV'}</Link>
+          <Link className="sidebar-user" to="/profile" onClick={() => setOpen(false)}><strong>{profile?.display_name || 'Người dùng'}</strong><span>{profile?.email}</span></Link>
+          <Link className="icon-button" to="/settings" onClick={() => setOpen(false)} aria-label="Cài đặt"><Settings size={18} /></Link>
           <button className="icon-button" onClick={logout} aria-label="Đăng xuất"><LogOut size={18} /></button>
         </div>
       </aside>

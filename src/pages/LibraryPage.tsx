@@ -43,8 +43,8 @@ export function LibraryPage() {
   if (error) return <ErrorState message={error} retry={() => void load()} />;
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Vocabulary library</span><h1>Từ điển cá nhân</h1><p>Tìm kiếm, lưu và phân loại từ vựng theo mức độ ghi nhớ.</p></div></div>
-    <form className="search-bar panel" onSubmit={submit}><Search size={20} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search word, phrase, collocation..." /><button className="button primary">Tra cứu</button></form>
+    <div className="page-heading"><div><span>Vocabulary library</span><h1>Từ điển cá nhân</h1><p>Học viên tự nhập từ mới, lưu và phân loại theo mức độ ghi nhớ.</p></div></div>
+    <form className="search-bar panel" onSubmit={submit}><Search size={20} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nhập từ, phrase hoặc collocation..." /><button className="button primary">Thêm từ</button></form>
     <div className="filter-row">{(['all','new','known','difficult'] as const).map((value) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{value === 'all' ? 'Tất cả' : value === 'new' ? 'Từ mới' : value === 'known' ? 'Đã thuộc' : 'Khó nhớ'}</button>)}</div>
     <section className="library-grid">
       <div className="panel"><div className="panel-heading"><div><h3>Thư viện của bạn</h3><p>{filtered.length} kết quả</p></div></div>{filtered.length ? <div className="word-list">{filtered.map((item) => <button key={item.id} className={selected?.id === item.id ? 'selected' : ''} onClick={() => setSelected(item)}><div><strong>{item.word}</strong><span>{item.phonetic || 'Chưa có phiên âm'} · {item.lookup_count} lượt tra</span></div><span className={`status ${item.status}`}>{item.status}</span></button>)}</div> : <EmptyState title="Chưa có từ phù hợp" description="Tra cứu một từ mới để thêm vào thư viện." />}</div>
