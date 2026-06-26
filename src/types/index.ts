@@ -65,8 +65,6 @@ export interface QuizResult {
 }
 
 export interface DashboardSummary {
-  courses: number;
-  lessons: number;
   vocabulary: number;
   known: number;
   difficult: number;

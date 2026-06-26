@@ -1,21 +1,34 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
-import { BookOpen, CalendarDays, ClipboardCheck, GraduationCap, Home, Library, LogOut, Menu, Settings, Users, X } from 'lucide-react';
+import { Bell, BookOpen, CalendarDays, ClipboardCheck, FileSpreadsheet, Home, Library, LogOut, Menu, Search, Send, Settings, Upload, Users, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const commonNav = [
+const studentNav = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
-  { to: '/courses', label: 'Khóa học', icon: GraduationCap },
-  { to: '/library', label: 'Từ điển', icon: Library },
+  { to: '/lookup', label: 'Tra cứu từ', icon: Search },
+  { to: '/library', label: 'Thư viện từ', icon: Library },
+  { to: '/assigned-words', label: 'Từ được giao', icon: Send },
   { to: '/flashcards', label: 'Flashcard', icon: BookOpen },
   { to: '/quiz', label: 'Quiz', icon: ClipboardCheck },
   { to: '/deadlines', label: 'Deadline', icon: CalendarDays },
+  { to: '/notifications', label: 'Thông báo', icon: Bell },
+];
+
+const teacherNav = [
+  { to: '/dashboard', label: 'Dashboard', icon: Home },
+  { to: '/lookup', label: 'Tra cứu từ', icon: Search },
+  { to: '/library', label: 'Kho từ vựng', icon: Library },
+  { to: '/assign-words', label: 'Giao từ', icon: Upload },
+  { to: '/import-excel', label: 'Import Excel', icon: FileSpreadsheet },
+  { to: '/students', label: 'Học viên', icon: Users },
+  { to: '/notifications', label: 'Thông báo', icon: Bell },
 ];
 
 export function Layout() {
   const { profile, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const navItems = profile?.role === 'teacher' ? teacherNav : studentNav;
 
   const logout = async () => {
     await signOut();
@@ -33,21 +46,16 @@ export function Layout() {
         </div>
         <p className="nav-caption">Học tập</p>
         <nav className="sidebar-nav">
-          {commonNav.map(({ to, label, icon: Icon }) => (
+          {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} onClick={() => setOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
               <Icon size={19} /><span>{label}</span>
             </NavLink>
           ))}
-          {profile?.role === 'teacher' && (
-            <NavLink to="/students" onClick={() => setOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
-              <Users size={19} /><span>Học viên</span>
-            </NavLink>
-          )}
         </nav>
         <div className="role-card">
           <span className="role-pill">{profile?.role === 'teacher' ? 'Teacher' : 'Student'}</span>
-          <strong>{profile?.role === 'teacher' ? 'Không gian giảng dạy' : 'Không gian học tập'}</strong>
-          <p>{profile?.role === 'teacher' ? 'Tạo khóa học và theo dõi học viên.' : 'Tham gia khóa học và ghi nhớ từ vựng.'}</p>
+          <strong>{profile?.role === 'teacher' ? 'Không gian giáo viên' : 'Không gian học từ vựng'}</strong>
+          <p>{profile?.role === 'teacher' ? 'Quản lý kho từ, giao từ và theo dõi học viên.' : 'Tra cứu, lưu từ, ôn flashcard và làm quiz mỗi ngày.'}</p>
         </div>
         <div className="sidebar-profile">
           <Link className="avatar" to="/profile" onClick={() => setOpen(false)}>{profile?.display_name?.slice(0, 2).toUpperCase() || 'UV'}</Link>

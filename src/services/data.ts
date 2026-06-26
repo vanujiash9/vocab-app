@@ -2,18 +2,14 @@ import { supabase } from '../lib/supabase';
 import type { Course, DashboardSummary, Deadline, Lesson, Profile, QuizResult, Vocabulary, VocabularyStatus } from '../types';
 
 export async function getDashboardSummary(userId: string): Promise<DashboardSummary> {
-  const [courses, lessons, vocabulary, deadlines] = await Promise.all([
-    supabase.from('accessible_courses').select('id', { count: 'exact', head: true }),
-    supabase.from('accessible_lessons').select('id', { count: 'exact', head: true }),
+  const [vocabulary, deadlines] = await Promise.all([
     supabase.from('vocabulary').select('id,status').eq('user_id', userId),
     supabase.from('deadlines').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('completed', false),
   ]);
-  const error = courses.error ?? lessons.error ?? vocabulary.error ?? deadlines.error;
+  const error = vocabulary.error ?? deadlines.error;
   if (error) throw error;
   const words = (vocabulary.data ?? []) as Pick<Vocabulary, 'id' | 'status'>[];
   return {
-    courses: courses.count ?? 0,
-    lessons: lessons.count ?? 0,
     vocabulary: words.length,
     known: words.filter((item) => item.status === 'known').length,
     difficult: words.filter((item) => item.status === 'difficult').length,

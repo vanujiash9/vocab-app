@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, CalendarClock, CheckCircle2, GraduationCap, LibraryBig, TriangleAlert } from 'lucide-react';
+import { CalendarClock, CheckCircle2, LibraryBig, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getDashboardSummary, listDeadlines } from '../services/data';
 import type { DashboardSummary, Deadline } from '../types';
@@ -29,15 +29,15 @@ export function DashboardPage() {
   if (!summary) return <LoadingState />;
 
   const stats = [
-    ['Khóa học', summary.courses, GraduationCap], ['Bài học', summary.lessons, BookOpen], ['Từ vựng', summary.vocabulary, LibraryBig],
-    ['Đã thuộc', summary.known, CheckCircle2], ['Khó nhớ', summary.difficult, TriangleAlert], ['Deadline mở', summary.openDeadlines, CalendarClock],
+    ['Từ vựng', summary.vocabulary, LibraryBig], ['Đã thuộc', summary.known, CheckCircle2],
+    ['Khó nhớ', summary.difficult, TriangleAlert], ['Deadline mở', summary.openDeadlines, CalendarClock],
   ] as const;
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Profile dashboard</span><h1>Xin chào, {profile?.display_name}</h1><p>Theo dõi tiến độ, nội dung học và các mốc quan trọng trên cùng một bảng điều khiển.</p></div></div>
+    <div className="page-heading"><div><span>Profile dashboard</span><h1>Xin chào, {profile?.display_name}</h1><p>Theo dõi từ vựng, quiz, flashcard và các mốc học tập cá nhân.</p></div></div>
     <section className="hero-card">
-      <div className="hero-copy"><span className="eyebrow">{profile?.role === 'teacher' ? 'Teacher workspace' : 'Student workspace'}</span><h2>{profile?.role === 'teacher' ? 'Tạo trải nghiệm học từ vựng rõ ràng và dễ theo dõi.' : 'Học từ vựng thông minh cùng trợ lý dễ thương.'}</h2><p>{profile?.role === 'teacher' ? 'Tạo khóa học, bài học và nội dung để học viên tham gia bằng mã.' : 'Tra từ, ôn flashcard, làm quiz và duy trì nhịp học mỗi ngày.'}</p></div>
-      <StudyMascot message={profile?.role === 'teacher' ? 'Hôm nay mình tạo bài học mới nhé!' : 'Hôm nay mình học từ nào?'} expression="happy" />
+      <div className="hero-copy"><span className="eyebrow">Vocabulary workspace</span><h2>Học từ vựng thông minh cùng trợ lý dễ thương.</h2><p>Nhập từ mới, ôn flashcard, làm quiz và duy trì nhịp học mỗi ngày.</p></div>
+      <StudyMascot message="Hôm nay mình học từ nào?" expression="happy" />
     </section>
     <section className="stats-grid">{stats.map(([label, value, Icon]) => <article className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><strong>{value}</strong><span>{label}</span></article>)}</section>
     <section className="dashboard-grid">
