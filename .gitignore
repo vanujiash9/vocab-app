@@ -1,0 +1,83 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+.npm/
+
+# Build output
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Vite
+.vite/
+vite.config.js
+vite.config.d.ts
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Supabase local files
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/config.local.toml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Cache and temporary files
+.cache/
+.tmp/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Test artifacts
+playwright-report/
+test-results/
+cypress/videos/
+cypress/screenshots/
+
+# Local database / generated files
+*.sqlite
+*.sqlite3
+*.db
+
+# Local Claude/tooling state
+.claude/
+.specify/
+.playwright-mcp/
+docs/
+
+# Misc
+*.local
+.vercel/
+.netlify/
