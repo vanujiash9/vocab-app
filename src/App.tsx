@@ -2,12 +2,15 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
+import { AssignedWordsPage } from './pages/AssignedWordsPage';
+import { AssignWordsPage } from './pages/AssignWordsPage';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DeadlinesPage } from './pages/DeadlinesPage';
 import { FlashcardsPage } from './pages/FlashcardsPage';
 import { DictionarySearchPage } from './features/dictionary/DictionarySearchPage';
 import { LibraryPage } from './pages/LibraryPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { QuizPage } from './pages/QuizPage';
@@ -26,12 +29,12 @@ export default function App() {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/lookup" element={<DictionarySearchPage />} />
       <Route path="/library" element={<LibraryPage />} />
-      <Route path="/assigned-words" element={<PlaceholderPage type="assigned" />} />
+      <Route path="/assigned-words" element={<AssignedWordsPage />} />
       <Route path="/flashcards" element={<FlashcardsPage />} />
       <Route path="/quiz" element={<QuizPage />} />
       <Route path="/deadlines" element={<DeadlinesPage />} />
-      <Route path="/notifications" element={<PlaceholderPage type="notifications" />} />
-      <Route path="/assign-words" element={<TeacherOnly><PlaceholderPage type="assign" /></TeacherOnly>} />
+      <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/assign-words" element={<TeacherOnly><AssignWordsPage /></TeacherOnly>} />
       <Route path="/import-excel" element={<TeacherOnly><PlaceholderPage type="import" /></TeacherOnly>} />
       <Route path="/students" element={<StudentsPage />} />
       <Route path="/profile" element={<ProfilePage />} />

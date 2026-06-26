@@ -71,7 +71,7 @@ export type Database = {
           teacher_id: string;
           dictionary_entry_id: string;
           note: string | null;
-          difficulty: string | null;
+          difficulty: 'easy' | 'medium' | 'hard' | null;
           created_at: string;
           updated_at: string;
         };

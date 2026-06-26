@@ -13,6 +13,8 @@ export interface DictionaryApiDefinition {
 export interface DictionaryApiMeaning {
   partOfSpeech: string;
   definitions: DictionaryApiDefinition[];
+  synonyms?: string[];
+  antonyms?: string[];
 }
 
 export interface DictionaryApiEntry {
@@ -33,6 +35,9 @@ export interface DictionaryEntry {
   phonetic: string | null;
   audioUrl: string | null;
   meanings: DictionaryMeaning[];
+  examples: string[];
+  synonyms: string[];
+  antonyms: string[];
   primaryDefinition: string;
   primaryExample: string | null;
   primaryPartOfSpeech: string | null;

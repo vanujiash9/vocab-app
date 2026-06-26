@@ -1,5 +1,6 @@
 export type UserRole = 'teacher' | 'student';
-export type VocabularyStatus = 'new' | 'known' | 'difficult';
+export type VocabularyStatus = 'new' | 'learning' | 'known' | 'difficult';
+export type TeacherVocabularyDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface Profile {
   id: string;
@@ -65,7 +66,7 @@ export interface TeacherVocabularyRecord {
   teacher_id: string;
   dictionary_entry_id: string;
   note: string | null;
-  difficulty: string | null;
+  difficulty: TeacherVocabularyDifficulty | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,6 +83,75 @@ export interface Vocabulary {
   example_sentence: string | null;
   status: VocabularyStatus;
   lookup_count: number;
+  created_at: string;
+}
+
+export interface StudentVocabularyItem extends Vocabulary {
+  dictionary_entry_id: string;
+  audio_url: string | null;
+  examples: string[];
+  synonyms: string[];
+  antonyms: string[];
+  personal_note: string | null;
+  updated_at: string;
+}
+
+export interface TeacherVocabularyItem {
+  id: string;
+  teacher_id: string;
+  dictionary_entry_id: string;
+  word: string;
+  phonetic: string | null;
+  audio_url: string | null;
+  part_of_speech: string | null;
+  english_definition: string;
+  vietnamese_meaning: string;
+  examples: string[];
+  synonyms: string[];
+  antonyms: string[];
+  note: string | null;
+  difficulty: TeacherVocabularyDifficulty | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeacherStudent {
+  id: string;
+  teacher_id: string;
+  student_id: string;
+  student_name: string;
+  student_email: string;
+  created_at: string;
+}
+
+export interface VocabularyAssignment {
+  id: string;
+  teacher_id: string;
+  student_id: string;
+  dictionary_entry_id: string;
+  word: string;
+  phonetic: string | null;
+  audio_url: string | null;
+  part_of_speech: string | null;
+  english_definition: string;
+  vietnamese_meaning: string;
+  examples: string[];
+  synonyms: string[];
+  antonyms: string[];
+  status: VocabularyStatus;
+  note: string | null;
+  assigned_at: string;
+  completed_at: string | null;
+}
+
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  actor_id: string | null;
+  type: string;
+  title: string;
+  message: string;
+  read_at: string | null;
   created_at: string;
 }
 
