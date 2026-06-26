@@ -30,6 +30,46 @@ export interface Lesson {
   created_at: string;
 }
 
+export interface DictionaryEntryRecord {
+  id: string;
+  normalized_word: string;
+  word: string;
+  phonetic: string | null;
+  audio_url: string | null;
+  part_of_speech: string | null;
+  english_definition: string;
+  vietnamese_meaning: string;
+  examples: string[];
+  synonyms: string[];
+  antonyms: string[];
+  provider: string;
+  raw_response: unknown;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserVocabularyRecord {
+  id: string;
+  user_id: string;
+  dictionary_entry_id: string;
+  lesson_id: string | null;
+  status: VocabularyStatus;
+  personal_note: string | null;
+  lookup_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeacherVocabularyRecord {
+  id: string;
+  teacher_id: string;
+  dictionary_entry_id: string;
+  note: string | null;
+  difficulty: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Vocabulary {
   id: string;
   user_id: string;
