@@ -146,8 +146,58 @@ create table public.quiz_results (
   lesson_id uuid references public.lessons(id) on delete set null,
   score integer not null,
   total integer not null check (total > 0 and score between 0 and total),
+  total_questions integer not null default 1 check (total_questions > 0),
+  correct_count integer not null default 0 check (correct_count >= 0 and correct_count <= total_questions),
+  mode text not null default 'definition' check (mode in ('definition', 'word')),
+  source text not null default 'all' check (source in ('all', 'new', 'learning', 'difficult', 'assigned')),
+  answers jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
+
+alter table public.quiz_results
+  add column if not exists total_questions integer,
+  add column if not exists correct_count integer,
+  add column if not exists mode text,
+  add column if not exists source text,
+  add column if not exists answers jsonb;
+
+update public.quiz_results
+set total_questions = coalesce(total_questions, total),
+    correct_count = coalesce(correct_count, score),
+    mode = coalesce(nullif(mode, ''), 'definition'),
+    source = coalesce(nullif(source, ''), 'all'),
+    answers = coalesce(answers, '[]'::jsonb);
+
+alter table public.quiz_results
+  alter column total_questions set default 1,
+  alter column correct_count set default 0,
+  alter column mode set default 'definition',
+  alter column source set default 'all',
+  alter column answers set default '[]'::jsonb,
+  alter column total_questions set not null,
+  alter column correct_count set not null,
+  alter column mode set not null,
+  alter column source set not null,
+  alter column answers set not null;
+
+alter table public.quiz_results
+  drop constraint if exists quiz_results_total_questions_check,
+  add constraint quiz_results_total_questions_check check (total_questions > 0),
+  drop constraint if exists quiz_results_correct_count_check,
+  add constraint quiz_results_correct_count_check check (correct_count >= 0 and correct_count <= total_questions),
+  drop constraint if exists quiz_results_mode_check,
+  add constraint quiz_results_mode_check check (mode in ('definition', 'word')),
+  drop constraint if exists quiz_results_source_check,
+  add constraint quiz_results_source_check check (source in ('all', 'new', 'learning', 'difficult', 'assigned')),
+  drop constraint if exists quiz_results_total_check,
+  add constraint quiz_results_total_check check (total > 0 and score between 0 and total);
+
+alter table public.quiz_results
+  alter column total_questions drop default,
+  alter column correct_count drop default,
+  alter column mode drop default,
+  alter column source drop default,
+  alter column answers drop default;
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$

@@ -9,9 +9,12 @@ import type {
   Deadline,
   DictionaryEntryRecord,
   Lesson,
+  ListStudyVocabularyOptions,
   Profile,
+  QuizAttemptInput,
   QuizResult,
   StudentVocabularyItem,
+  StudyVocabularyItem,
   TeacherStudent,
   TeacherVocabularyDifficulty,
   TeacherVocabularyItem,
@@ -503,6 +506,49 @@ function mapAssignment(row: JoinedAssignmentRow): VocabularyAssignment {
   };
 }
 
+function mapStudyLibraryItem(item: StudentVocabularyItem): StudyVocabularyItem {
+  return {
+    id: `library:${item.id}`,
+    recordId: item.id,
+    recordType: 'library',
+    dictionaryEntryId: item.dictionary_entry_id,
+    word: item.word,
+    partOfSpeech: item.part_of_speech,
+    phonetic: item.phonetic,
+    audioUrl: item.audio_url,
+    englishDefinition: item.english_definition,
+    vietnameseMeaning: item.vietnamese_meaning,
+    examples: item.examples,
+    status: item.status,
+  };
+}
+
+function mapStudyAssignedItem(item: VocabularyAssignment): StudyVocabularyItem {
+  return {
+    id: `assigned:${item.id}`,
+    recordId: item.id,
+    recordType: 'assigned',
+    dictionaryEntryId: item.dictionary_entry_id,
+    word: item.word,
+    partOfSpeech: item.part_of_speech,
+    phonetic: item.phonetic,
+    audioUrl: item.audio_url,
+    englishDefinition: item.english_definition,
+    vietnameseMeaning: item.vietnamese_meaning,
+    examples: item.examples,
+    status: item.status,
+  };
+}
+
+function uniqueStudyItems(items: StudyVocabularyItem[]): StudyVocabularyItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.dictionaryEntryId)) return false;
+    seen.add(item.dictionaryEntryId);
+    return true;
+  });
+}
+
 export async function listTeacherStudents(teacherId: string): Promise<TeacherStudent[]> {
   const { data, error } = await supabase
     .from('teacher_students')
@@ -559,6 +605,48 @@ export async function listAssignmentsForStudent(studentId: string): Promise<Voca
 export async function updateAssignmentStatus(id: string, status: VocabularyStatus): Promise<void> {
   const { error } = await supabase.from('vocabulary_assignments').update({ status, completed_at: status === 'known' ? new Date().toISOString() : null }).eq('id', id);
   if (error) throw error;
+}
+
+export async function listStudyVocabulary(options: ListStudyVocabularyOptions): Promise<StudyVocabularyItem[]> {
+  const [libraryItems, assignedItems] = await Promise.all([
+    listStudentVocabulary(options.userId),
+    listAssignmentsForStudent(options.userId),
+  ]);
+
+  const libraryStudyItems = libraryItems.map(mapStudyLibraryItem);
+  const assignedStudyItems = assignedItems.map(mapStudyAssignedItem);
+
+  const items = options.source === 'assigned'
+    ? assignedStudyItems
+    : options.source === 'all'
+      ? uniqueStudyItems([...libraryStudyItems, ...assignedStudyItems])
+      : libraryStudyItems.filter((item) => item.status === options.source);
+
+  return typeof options.limit === 'number' ? items.slice(0, options.limit) : items;
+}
+
+export async function updateVocabularyLearningStatus(item: StudyVocabularyItem, status: VocabularyStatus): Promise<void> {
+  if (item.recordType === 'assigned') {
+    await updateAssignmentStatus(item.recordId, status);
+    return;
+  }
+
+  await updateStudentVocabularyStatus(item.recordId, status);
+}
+
+export async function saveQuizAttempt(input: QuizAttemptInput): Promise<QuizResult> {
+  const { data, error } = await supabase.from('quiz_results').insert({
+    user_id: input.userId,
+    score: input.score,
+    total: input.totalQuestions,
+    total_questions: input.totalQuestions,
+    correct_count: input.correctCount,
+    mode: input.mode,
+    source: input.source,
+    answers: input.answers,
+  }).select().single();
+  if (error) throw error;
+  return data as QuizResult;
 }
 
 export async function listNotifications(userId: string): Promise<AppNotification[]> {

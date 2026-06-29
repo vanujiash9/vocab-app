@@ -81,3 +81,5 @@ docs/
 *.local
 .vercel/
 .netlify/
+.vercel
+.env*

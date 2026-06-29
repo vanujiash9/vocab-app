@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { NavigateOptions } from 'react-router-dom';
 import { Plus, Search, Trash2, Upload, Volume2 } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 import { useAuth } from '../contexts/AuthContext';
@@ -143,6 +144,19 @@ function TeacherVocabularyStore() {
   const [items, setItems] = useState<TeacherVocabularyItem[]>([]);
   const [selected, setSelected] = useState<TeacherVocabularyItem | null>(null);
   const [checked, setChecked] = useState<string[]>([]);
+  const goToAssignWords = (selectedWords: string[]) => {
+    const options: NavigateOptions | undefined = selectedWords.length ? { state: { selectedWords } } : undefined;
+    navigate('/assign-words', options);
+  };
+
+  const buildAssignButtonMessage = (count: number) => count ? `Giao ${count} từ đã chọn` : 'Giao từ';
+
+  const handleAssignWords = () => {
+    goToAssignWords(checked);
+  };
+
+  // ponytail: this only forwards selected dictionary entry ids inside app navigation; add shareable URL state later if needed.
+
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<TeacherFilter>('all');
   const [note, setNote] = useState('');
@@ -210,13 +224,13 @@ function TeacherVocabularyStore() {
   if (error) return <ErrorState message={error} retry={() => void load()} />;
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Teacher vocabulary store</span><h1>Kho từ vựng</h1><p>Quản lý từ đã tra, ghi chú độ khó và chuẩn bị giao từ cho học viên.</p></div><div className="status-actions"><button className="button secondary" onClick={() => setShowManualForm(true)}><Plus size={17} /> Nhập từ vựng</button><button className="button secondary" onClick={() => navigate('/import-excel')}><Upload size={17} /> Import Excel</button><button className="button primary" disabled={!checked.length} onClick={() => setMessage(`Đã chọn ${checked.length} từ. Chức năng giao từ sẽ làm ở sprint sau.`)}>Giao từ</button></div></div>
+    <div className="page-heading"><div><span>Teacher vocabulary store</span><h1>Kho từ vựng</h1><p>Quản lý từ đã tra, ghi chú độ khó và chuẩn bị giao từ cho học viên.</p></div><div className="status-actions"><button className="button secondary" onClick={() => setShowManualForm(true)}><Plus size={17} /> Nhập từ vựng</button><button className="button secondary" onClick={() => navigate('/import-excel')}><Upload size={17} /> Import Excel</button><button className="button primary" disabled={!checked.length} onClick={handleAssignWords}>{buildAssignButtonMessage(checked.length)}</button></div></div>
     {message && <div className="form-message standalone">{message}</div>}
     <VocabularyManualForm role="teacher" open={showManualForm} onSubmit={saveManual} onClose={() => setShowManualForm(false)} />
     <div className="search-bar panel"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm trong kho từ..." /></div>
     <div className="filter-row">{teacherFilters.map((value) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{value === 'all' ? 'Tất cả' : value === 'unset' ? 'Chưa đặt' : value}</button>)}</div>
     <section className="library-grid">
-      <div className="panel"><div className="panel-heading"><div><h3>Kho giáo viên</h3><p>{filtered.length} kết quả · {checked.length} đã chọn</p></div></div>{filtered.length ? <div className="word-list">{filtered.map((item) => <button key={item.id} className={selected?.id === item.id ? 'selected' : ''} onClick={() => selectItem(item)}><input type="checkbox" checked={checked.includes(item.id)} onChange={() => toggleChecked(item.id)} onClick={(event) => event.stopPropagation()} /><div><strong>{item.word}</strong><span>{item.phonetic || 'Chưa có phiên âm'}</span></div><span className={`status ${item.difficulty ?? 'new'}`}>{item.difficulty ?? 'unset'}</span></button>)}</div> : <EmptyState title="Kho từ đang trống" description="Tra cứu từ rồi thêm vào Kho từ vựng." />}</div>
+      <div className="panel"><div className="panel-heading"><div><h3>Kho giáo viên</h3><p>{filtered.length} kết quả · {checked.length} đã chọn</p></div></div>{filtered.length ? <div className="word-list">{filtered.map((item) => <button key={item.id} className={selected?.id === item.id ? 'selected' : ''} onClick={() => selectItem(item)}><input type="checkbox" checked={checked.includes(item.dictionary_entry_id)} onChange={() => toggleChecked(item.dictionary_entry_id)} onClick={(event) => event.stopPropagation()} /><div><strong>{item.word}</strong><span>{item.phonetic || 'Chưa có phiên âm'}</span></div><span className={`status ${item.difficulty ?? 'new'}`}>{item.difficulty ?? 'unset'}</span></button>)}</div> : <EmptyState title="Kho từ đang trống" description="Tra cứu từ rồi thêm vào Kho từ vựng." />}</div>
       <div className="panel word-detail">{selected ? <><WordMeta item={selected} /><div className="detail-block"><h4>Mức độ</h4><select value={difficulty} onChange={(event) => setDifficulty(event.target.value as TeacherVocabularyDifficulty | '')}><option value="">Chưa đặt</option><option value="easy">easy</option><option value="medium">medium</option><option value="hard">hard</option></select></div><div className="detail-block"><h4>Ghi chú giáo viên</h4><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ghi chú cách dạy, nhóm chủ đề..." /><div className="status-actions"><button className="button primary" onClick={() => void saveTeacherDetail()}>Lưu thay đổi</button></div></div></> : <EmptyState title="Chọn một từ" description="Thông tin chi tiết sẽ hiển thị ở đây." />}</div>
     </section>
   </div>;

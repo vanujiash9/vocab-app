@@ -165,12 +165,59 @@ export interface Deadline {
   created_at: string;
 }
 
+export type StudyVocabularySource = 'all' | 'new' | 'learning' | 'difficult' | 'assigned';
+export type StudyVocabularyRecordType = 'library' | 'assigned';
+export type QuizMode = 'definition' | 'word';
+
+export interface StudyVocabularyItem {
+  id: string;
+  recordId: string;
+  recordType: StudyVocabularyRecordType;
+  dictionaryEntryId: string;
+  word: string;
+  partOfSpeech: string | null;
+  phonetic: string | null;
+  audioUrl: string | null;
+  englishDefinition: string;
+  vietnameseMeaning: string;
+  examples: string[];
+  status: VocabularyStatus;
+}
+
+export interface ListStudyVocabularyOptions {
+  userId: string;
+  source: StudyVocabularySource;
+  limit?: number;
+}
+
+export interface QuizAttemptAnswer {
+  question: string;
+  correctAnswer: string;
+  selectedAnswer: string;
+  isCorrect: boolean;
+}
+
+export interface QuizAttemptInput {
+  userId: string;
+  score: number;
+  totalQuestions: number;
+  correctCount: number;
+  mode: QuizMode;
+  source: StudyVocabularySource;
+  answers: QuizAttemptAnswer[];
+}
+
 export interface QuizResult {
   id: string;
   user_id: string;
   lesson_id: string | null;
   score: number;
   total: number;
+  total_questions: number;
+  correct_count: number;
+  mode: QuizMode;
+  source: StudyVocabularySource;
+  answers: QuizAttemptAnswer[];
   created_at: string;
 }
 
