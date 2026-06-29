@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Trash2, Volume2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Trash2, Upload, Volume2 } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 import { useAuth } from '../contexts/AuthContext';
+import { VocabularyManualForm } from '../features/vocabulary-manual/VocabularyManualForm';
+import type { VocabularyManualInput } from '../features/vocabulary-manual/vocabularyManual.types';
 import {
   deleteStudentVocabulary,
   listStudentVocabulary,
   listTeacherVocabulary,
+  saveManualStudentVocabulary,
+  saveManualTeacherVocabulary,
   updateStudentVocabularyNote,
   updateStudentVocabularyStatus,
   updateTeacherVocabularyDifficulty,
@@ -52,6 +57,8 @@ function StudentLibrary() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<StudentFilter>('all');
   const [note, setNote] = useState('');
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -102,11 +109,25 @@ function StudentLibrary() {
     await load();
   };
 
+  const saveManual = async (data: VocabularyManualInput) => {
+    if (!user) return;
+    const result = await saveManualStudentVocabulary(user.id, data);
+    if (result.status === 'duplicate') {
+      setMessage('Từ này đã có trong thư viện.');
+      return;
+    }
+    setMessage('Đã lưu từ vào thư viện.');
+    setShowManualForm(false);
+    await load();
+  };
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} retry={() => void load()} />;
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Student library</span><h1>Thư viện từ</h1><p>Tìm kiếm, ghi chú và phân loại từ đã lưu từ trang Tra cứu từ.</p></div></div>
+    <div className="page-heading"><div><span>Student library</span><h1>Thư viện từ</h1><p>Tìm kiếm, ghi chú và phân loại từ đã lưu từ trang Tra cứu từ.</p></div><button className="button primary" onClick={() => setShowManualForm(true)}><Plus size={17} /> Nhập từ vựng</button></div>
+    {message && <div className="form-message standalone">{message}</div>}
+    <VocabularyManualForm role="student" open={showManualForm} onSubmit={saveManual} onClose={() => setShowManualForm(false)} />
     <div className="search-bar panel"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm trong thư viện..." /></div>
     <div className="filter-row">{studentFilters.map((value) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{value === 'all' ? 'Tất cả' : value === 'new' ? 'Từ mới' : value === 'learning' ? 'Đang học' : value === 'known' ? 'Đã thuộc' : 'Khó nhớ'}</button>)}</div>
     <section className="library-grid">
@@ -118,6 +139,7 @@ function StudentLibrary() {
 
 function TeacherVocabularyStore() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<TeacherVocabularyItem[]>([]);
   const [selected, setSelected] = useState<TeacherVocabularyItem | null>(null);
   const [checked, setChecked] = useState<string[]>([]);
@@ -125,6 +147,7 @@ function TeacherVocabularyStore() {
   const [filter, setFilter] = useState<TeacherFilter>('all');
   const [note, setNote] = useState('');
   const [difficulty, setDifficulty] = useState<TeacherVocabularyDifficulty | ''>('');
+  const [showManualForm, setShowManualForm] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -171,12 +194,25 @@ function TeacherVocabularyStore() {
     await load();
   };
 
+  const saveManual = async (data: VocabularyManualInput) => {
+    if (!user) return;
+    const result = await saveManualTeacherVocabulary(user.id, data);
+    if (result.status === 'duplicate') {
+      setMessage('Từ này đã có trong kho từ.');
+      return;
+    }
+    setMessage('Đã lưu từ vào kho từ.');
+    setShowManualForm(false);
+    await load();
+  };
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} retry={() => void load()} />;
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Teacher vocabulary store</span><h1>Kho từ vựng</h1><p>Quản lý từ đã tra, ghi chú độ khó và chuẩn bị giao từ cho học viên.</p></div><button className="button primary" disabled={!checked.length} onClick={() => setMessage(`Đã chọn ${checked.length} từ. Chức năng giao từ sẽ làm ở sprint sau.`)}>Giao từ</button></div>
+    <div className="page-heading"><div><span>Teacher vocabulary store</span><h1>Kho từ vựng</h1><p>Quản lý từ đã tra, ghi chú độ khó và chuẩn bị giao từ cho học viên.</p></div><div className="status-actions"><button className="button secondary" onClick={() => setShowManualForm(true)}><Plus size={17} /> Nhập từ vựng</button><button className="button secondary" onClick={() => navigate('/import-excel')}><Upload size={17} /> Import Excel</button><button className="button primary" disabled={!checked.length} onClick={() => setMessage(`Đã chọn ${checked.length} từ. Chức năng giao từ sẽ làm ở sprint sau.`)}>Giao từ</button></div></div>
     {message && <div className="form-message standalone">{message}</div>}
+    <VocabularyManualForm role="teacher" open={showManualForm} onSubmit={saveManual} onClose={() => setShowManualForm(false)} />
     <div className="search-bar panel"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm trong kho từ..." /></div>
     <div className="filter-row">{teacherFilters.map((value) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{value === 'all' ? 'Tất cả' : value === 'unset' ? 'Chưa đặt' : value}</button>)}</div>
     <section className="library-grid">

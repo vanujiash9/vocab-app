@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { DictionaryEntry } from '../features/dictionary/dictionary.types';
+import { normalizeManualInput, normalizeWordKey, validateManualInput } from '../features/vocabulary-manual/vocabularyManual.utils';
+import type { VocabularyImportPreviewRow, VocabularyManualInput } from '../features/vocabulary-manual/vocabularyManual.types';
 import type {
   AppNotification,
   Course,
@@ -176,6 +178,35 @@ async function upsertDictionaryEntryFromLookup(entry: DictionaryEntry): Promise<
   return requireDictionaryEntry(data as DictionaryEntryRecord);
 }
 
+export async function createOrGetDictionaryEntry(input: VocabularyManualInput): Promise<DictionaryEntryRecord> {
+  const normalized = normalizeManualInput(input);
+  const errors = validateManualInput(normalized);
+  if (errors.length) throw new Error(errors.join(', '));
+
+  const normalizedWord = normalizeWordKey(normalized.word);
+  const { data: existing, error: existingError } = await supabase.from('dictionary_entries').select('*').eq('normalized_word', normalizedWord).maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) return requireDictionaryEntry(existing as DictionaryEntryRecord);
+
+  const payload = {
+    normalized_word: normalizedWord,
+    word: normalized.word.trim(),
+    phonetic: null,
+    audio_url: null,
+    part_of_speech: normalized.partOfSpeech ?? null,
+    english_definition: normalized.englishDefinition,
+    vietnamese_meaning: normalized.vietnameseMeaning ?? normalized.englishDefinition,
+    examples: normalized.examples,
+    synonyms: normalized.synonyms,
+    antonyms: normalized.antonyms,
+    provider: 'manual',
+    raw_response: { collocations: normalized.collocations },
+  };
+  const { data, error } = await supabase.from('dictionary_entries').insert(payload).select().single();
+  if (error) throw error;
+  return requireDictionaryEntry(data as DictionaryEntryRecord);
+}
+
 async function getUserVocabularyByEntry(userId: string, dictionaryEntryId: string): Promise<StudentVocabularyItem | null> {
   const { data, error } = await supabase
     .from('user_vocabulary')
@@ -315,6 +346,83 @@ export async function saveDictionaryVocabulary(userId: string, role: UserRole | 
   const { error } = await supabase.from('user_vocabulary').insert({ user_id: userId, dictionary_entry_id: dictionaryEntry.id, status: 'new' });
   if (error) throw error;
   return { status: 'saved' };
+}
+
+export async function saveManualStudentVocabulary(userId: string, input: VocabularyManualInput): Promise<{ status: 'saved' | 'duplicate' }> {
+  const normalized = normalizeManualInput(input);
+  const entry = await createOrGetDictionaryEntry(normalized);
+  const existing = await getUserVocabularyByEntry(userId, entry.id);
+  if (existing) return { status: 'duplicate' };
+
+  const { error } = await supabase.from('user_vocabulary').insert({
+    user_id: userId,
+    dictionary_entry_id: entry.id,
+    status: 'new' as VocabularyStatus,
+    personal_note: normalized.note ?? null,
+  });
+  if (error) throw error;
+  return { status: 'saved' };
+}
+
+export async function saveManualTeacherVocabulary(teacherId: string, input: VocabularyManualInput): Promise<{ status: 'saved' | 'duplicate' }> {
+  const normalized = normalizeManualInput(input);
+  const entry = await createOrGetDictionaryEntry(normalized);
+  const { data: existing, error: existingError } = await supabase
+    .from('teacher_vocabulary')
+    .select('id')
+    .eq('teacher_id', teacherId)
+    .eq('dictionary_entry_id', entry.id)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) return { status: 'duplicate' };
+
+  const { error } = await supabase.from('teacher_vocabulary').insert({
+    teacher_id: teacherId,
+    dictionary_entry_id: entry.id,
+    note: normalized.note ?? null,
+    difficulty: normalized.difficulty ?? null,
+  });
+  if (error) throw error;
+  return { status: 'saved' };
+}
+
+export async function validateVocabularyImportRows(teacherId: string, rows: VocabularyManualInput[]): Promise<VocabularyImportPreviewRow[]> {
+  const { data, error } = await supabase
+    .from('teacher_vocabulary')
+    .select('dictionary_entries(normalized_word)')
+    .eq('teacher_id', teacherId);
+  if (error) throw error;
+
+  const existingWords = new Set(
+    ((data ?? []) as Array<{ dictionary_entries: Array<{ normalized_word: string }> | null }>)
+      .map((row) => row.dictionary_entries?.[0]?.normalized_word)
+      .filter(Boolean),
+  );
+  const seen = new Set<string>();
+
+  return rows.map((row, index) => {
+    const input = normalizeManualInput(row);
+    const wordKey = normalizeWordKey(input.word);
+    const errors = validateManualInput(input);
+    if (row.difficulty && !input.difficulty) errors.push('difficulty không hợp lệ');
+    const isDuplicateInFile = Boolean(wordKey && seen.has(wordKey));
+    if (wordKey) seen.add(wordKey);
+    const isDuplicateInStore = existingWords.has(wordKey);
+    const duplicateErrors = [isDuplicateInFile ? 'từ bị trùng trong file' : '', isDuplicateInStore ? 'từ đã có trong Kho từ vựng' : ''].filter(Boolean);
+    const status = errors.length ? 'invalid' : duplicateErrors.length ? 'duplicate' : 'valid';
+    return { rowNumber: index + 2, input, status, errors: [...errors, ...duplicateErrors], selected: status === 'valid' };
+  });
+}
+
+export async function importTeacherVocabularyBatch(teacherId: string, rows: VocabularyManualInput[]): Promise<{ imported: number; duplicates: number }> {
+  let imported = 0;
+  let duplicates = 0;
+  for (const row of rows) {
+    const result = await saveManualTeacherVocabulary(teacherId, row);
+    if (result.status === 'saved') imported += 1;
+    else duplicates += 1;
+  }
+  return { imported, duplicates };
 }
 
 export async function updateVocabularyStatus(id: string, status: VocabularyStatus): Promise<void> {
