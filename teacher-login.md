@@ -1,0 +1,14 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - text: Đăng nhập
+    - heading "Tiếp tục hành trình học" [level=2] [ref=e7]
+  - generic [ref=e8]:
+    - text: Email
+    - textbox "Email" [ref=e9]:
+      - /placeholder: you@example.com
+  - generic [ref=e10]:
+    - text: Mật khẩu
+    - textbox "Mật khẩu" [ref=e11]:
+      - /placeholder: Tối thiểu 6 ký tự
+  - button "Đăng nhập" [ref=e12] [cursor=pointer]
+  - button "Chưa có tài khoản? Đăng ký" [ref=e13] [cursor=pointer]

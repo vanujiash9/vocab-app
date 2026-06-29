@@ -5,6 +5,10 @@ node_modules/
 .yarn-cache/
 .npm/
 
+# Python
+__pycache__/
+*.pyc
+
 # Build output
 dist/
 build/
@@ -83,3 +87,4 @@ docs/
 .netlify/
 .vercel
 .env*
+supabase-secrets.env

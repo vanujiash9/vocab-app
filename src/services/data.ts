@@ -569,27 +569,14 @@ export async function removeTeacherStudent(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function assignVocabularyToStudents(teacherId: string, studentIds: string[], dictionaryEntryIds: string[]): Promise<void> {
-  const rows = studentIds.flatMap((studentId) => dictionaryEntryIds.map((dictionaryEntryId) => ({
-    teacher_id: teacherId,
-    student_id: studentId,
-    dictionary_entry_id: dictionaryEntryId,
-    status: 'new' as VocabularyStatus,
-  })));
-  if (!rows.length) return;
+export async function assignVocabularyToStudents(_teacherId: string, studentIds: string[], dictionaryEntryIds: string[]): Promise<void> {
+  if (!studentIds.length || !dictionaryEntryIds.length) return;
 
-  const { error } = await supabase.from('vocabulary_assignments').upsert(rows, { onConflict: 'teacher_id,student_id,dictionary_entry_id' });
+  const { error } = await supabase.rpc('assign_vocabulary_to_students', {
+    p_student_ids: studentIds,
+    p_dictionary_entry_ids: dictionaryEntryIds,
+  });
   if (error) throw error;
-
-  const notifications = studentIds.map((studentId) => ({
-    user_id: studentId,
-    actor_id: teacherId,
-    type: 'vocabulary_assignment',
-    title: 'Bạn có từ vựng mới được giao',
-    message: `Giáo viên đã giao ${dictionaryEntryIds.length} từ mới cho bạn.`,
-  }));
-  const { error: notificationError } = await supabase.from('notifications').insert(notifications);
-  if (notificationError) throw notificationError;
 }
 
 export async function listAssignmentsForStudent(studentId: string): Promise<VocabularyAssignment[]> {
@@ -658,6 +645,16 @@ export async function listNotifications(userId: string): Promise<AppNotification
 export async function markNotificationRead(id: string): Promise<void> {
   const { error } = await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
+}
+
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .is('read_at', null);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function listDeadlines(userId: string): Promise<Deadline[]> {

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
-import { Bell, BookOpen, CalendarDays, ClipboardCheck, FileSpreadsheet, Home, Library, LogOut, Menu, Search, Send, Settings, Upload, Users, X } from 'lucide-react';
+import { Bell, BookOpen, Bot, CalendarDays, ClipboardCheck, FileSpreadsheet, Home, Library, LogOut, Menu, Search, Send, Settings, Upload, Users, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { getUnreadNotificationCount } from '../services/data';
 
 const studentNav = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
@@ -10,6 +12,7 @@ const studentNav = [
   { to: '/assigned-words', label: 'Từ được giao', icon: Send },
   { to: '/flashcards', label: 'Flashcard', icon: BookOpen },
   { to: '/quiz', label: 'Quiz', icon: ClipboardCheck },
+  { to: '/ai-assistant', label: 'Trợ lý AI', icon: Bot },
   { to: '/deadlines', label: 'Deadline', icon: CalendarDays },
   { to: '/notifications', label: 'Thông báo', icon: Bell },
 ];
@@ -19,16 +22,63 @@ const teacherNav = [
   { to: '/lookup', label: 'Tra cứu từ', icon: Search },
   { to: '/library', label: 'Kho từ vựng', icon: Library },
   { to: '/assign-words', label: 'Giao từ', icon: Upload },
+  { to: '/ai-assistant', label: 'Trợ lý AI', icon: Bot },
   { to: '/import-excel', label: 'Import Excel', icon: FileSpreadsheet },
   { to: '/students', label: 'Học viên', icon: Users },
   { to: '/notifications', label: 'Thông báo', icon: Bell },
 ];
 
 export function Layout() {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
   const navItems = profile?.role === 'teacher' ? teacherNav : studentNav;
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let active = true;
+
+    const loadUnreadCount = async () => {
+      try {
+        const count = await getUnreadNotificationCount(user.id);
+        if (active) {
+          setUnreadCount(count);
+        }
+      } catch {
+        if (active) {
+          setUnreadCount(0);
+        }
+      }
+    };
+
+    void loadUnreadCount();
+
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          void loadUnreadCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const logout = async () => {
     await signOut();
@@ -46,11 +96,17 @@ export function Layout() {
         </div>
         <p className="nav-caption">Học tập</p>
         <nav className="sidebar-nav">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} onClick={() => setOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
-              <Icon size={19} /><span>{label}</span>
-            </NavLink>
-          ))}
+          {navItems.map(({ to, label, icon: Icon }) => {
+            const hasUnreadNotifications = to === '/notifications' && unreadCount > 0;
+            return <NavLink key={to} to={to} onClick={() => setOpen(false)} className={({ isActive }) => `${isActive ? 'active' : ''} ${hasUnreadNotifications ? 'unread' : ''}`.trim()}>
+              <span className={`nav-icon-wrap ${hasUnreadNotifications ? 'has-alert' : ''}`}>
+                <Icon size={19} />
+                {hasUnreadNotifications && <i className="nav-alert-dot" aria-hidden="true" />}
+              </span>
+              <span>{label}</span>
+              {hasUnreadNotifications && <b className="nav-alert-badge">{unreadCount > 9 ? '9+' : unreadCount}</b>}
+            </NavLink>;
+          })}
         </nav>
         <div className="role-card">
           <span className="role-pill">{profile?.role === 'teacher' ? 'Teacher' : 'Student'}</span>

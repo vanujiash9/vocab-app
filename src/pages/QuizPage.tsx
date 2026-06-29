@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { BookOpen, ClipboardCheck, Layers3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { listStudyVocabulary, saveQuizAttempt } from '../services/data';
@@ -19,7 +20,28 @@ const MODE_OPTIONS: Array<{ value: QuizMode; label: string }> = [
   { value: 'word', label: 'Chọn từ đúng' },
 ];
 
+const SOURCE_SUMMARY_LABELS: Record<StudyVocabularySource, string> = {
+  all: 'Tất cả từ',
+  new: 'Từ mới',
+  learning: 'Từ đang học',
+  difficult: 'Cần xem lại',
+  assigned: 'Từ được giao',
+};
+
+const MODE_SUMMARY_LABELS: Record<QuizMode, string> = {
+  definition: 'Chọn nghĩa',
+  word: 'Chọn từ',
+};
+
 type QuizStage = 'setup' | 'playing' | 'done';
+
+function getQuizPaceLabel(questionCount: number): string {
+  return questionCount <= 5 ? 'Kiểm tra nhanh' : questionCount <= 10 ? 'Ôn vừa sức' : 'Ôn kỹ hơn';
+}
+
+function SetupFieldLabel({ icon, title }: { icon: ReactNode; title: string }) {
+  return <span className="study-field-label"><i>{icon}</i>{title}</span>;
+}
 
 interface QuizOption {
   value: string;
@@ -183,29 +205,52 @@ export function QuizPage() {
   if (stage === 'setup') {
     return <div className="page-wrap">
       <div className="page-heading"><div><span>Practice quiz</span><h1>Kiểm tra từ vựng</h1><p>Chọn nhóm từ, số câu và dạng quiz thật đơn giản.</p></div></div>
-      <section className="panel quiz-panel study-setup-panel">
+      <section className="panel quiz-panel study-setup-panel study-setup-card">
+        <div className="study-setup-intro">
+          <div>
+            <span className="eyebrow">Practice ready</span>
+            <h2>Thiết lập bài quiz nhanh</h2>
+            <p>Chọn nhóm từ, số câu và dạng câu hỏi để tạo một lượt kiểm tra ngắn, dễ tập trung và phù hợp với tiến độ học hiện tại.</p>
+          </div>
+          <div className="study-setup-note">
+            <strong>Mẹo nhỏ</strong>
+            <span>Quiz 5 câu phù hợp để kiểm tra nhanh, còn 10–20 câu hợp cho lượt ôn kỹ hơn.</span>
+          </div>
+        </div>
         <div className="study-setup-grid study-setup-grid-quiz">
-          <label className="manual-vocabulary-field">
-            <span>Nhóm từ</span>
+          <label className="manual-vocabulary-field study-setup-field">
+            <SetupFieldLabel icon={<Layers3 size={14} />} title="Nhóm từ" />
+            <small>Lọc đúng nhóm bạn muốn kiểm tra.</small>
             <select value={source} onChange={(event) => setSource(event.target.value as StudyVocabularySource)}>
               {SOURCE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
-          <label className="manual-vocabulary-field">
-            <span>Số câu</span>
+          <label className="manual-vocabulary-field study-setup-field">
+            <SetupFieldLabel icon={<ClipboardCheck size={14} />} title="Số câu" />
+            <small>Số câu sẽ xuất hiện trong lượt này.</small>
             <select value={count} onChange={(event) => setCount(Number(event.target.value) as (typeof COUNT_OPTIONS)[number])}>
               {COUNT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
-          <label className="manual-vocabulary-field">
-            <span>Dạng quiz</span>
+          <label className="manual-vocabulary-field study-setup-field">
+            <SetupFieldLabel icon={<BookOpen size={14} />} title="Dạng quiz" />
+            <small>Chọn cách kiểm tra nghĩa hoặc từ vựng.</small>
             <select value={mode} onChange={(event) => setMode(event.target.value as QuizMode)}>
               {MODE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
         </div>
-        {error && <div className="form-message standalone">{error}</div>}
-        <button className="button primary" onClick={() => void start()}>Bắt đầu quiz</button>
+        <div className="study-quick-card" aria-label="Thông tin nhanh của quiz">
+          <div className="study-quick-chip"><strong>{count} câu</strong><span>{getQuizPaceLabel(count)}</span></div>
+          <div className="study-quick-chip"><strong>{MODE_SUMMARY_LABELS[mode]}</strong><span>Dạng câu hỏi hiện tại</span></div>
+          <div className="study-quick-chip"><strong>{SOURCE_SUMMARY_LABELS[source]}</strong><span>Nhóm từ đang chọn</span></div>
+        </div>
+        <div className="study-setup-footer">
+          {error ? <div className="form-message standalone">{error}</div> : <div className="study-setup-hint">Hệ thống sẽ tự lấy những từ phù hợp từ thư viện học hiện tại của bạn.</div>}
+          <div className="study-setup-actions">
+            <button className="button primary" onClick={() => void start()}>Bắt đầu quiz</button>
+          </div>
+        </div>
       </section>
     </div>;
   }

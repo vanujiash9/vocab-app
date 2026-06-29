@@ -68,6 +68,7 @@ create table public.dictionary_entries (
   examples jsonb not null default '[]'::jsonb,
   synonyms jsonb not null default '[]'::jsonb,
   antonyms jsonb not null default '[]'::jsonb,
+  collocations jsonb not null default '[]'::jsonb,
   provider text not null default 'manual',
   raw_response jsonb,
   created_at timestamptz not null default now(),
@@ -114,6 +115,9 @@ create table public.vocabulary_assignments (
   dictionary_entry_id uuid not null references public.dictionary_entries(id) on delete cascade,
   status public.vocabulary_status not null default 'new',
   note text,
+  start_at timestamptz not null default now(),
+  due_at timestamptz,
+  priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   assigned_at timestamptz not null default now(),
   completed_at timestamptz,
   unique(teacher_id, student_id, dictionary_entry_id)
@@ -291,6 +295,77 @@ end;
 $$;
 
 grant execute on function public.add_teacher_student_by_email(text) to authenticated;
+
+create or replace function public.assign_vocabulary_to_students(
+  p_student_ids uuid[],
+  p_dictionary_entry_ids uuid[]
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_student_id uuid;
+  v_dictionary_entry_id uuid;
+begin
+  if not public.is_teacher() then
+    raise exception 'Chỉ teacher mới có thể giao từ';
+  end if;
+
+  if coalesce(array_length(p_student_ids, 1), 0) = 0 then
+    raise exception 'Cần chọn ít nhất một học viên';
+  end if;
+
+  if coalesce(array_length(p_dictionary_entry_ids, 1), 0) = 0 then
+    raise exception 'Cần chọn ít nhất một từ';
+  end if;
+
+  if exists (
+    select 1
+    from unnest(p_student_ids) as student_id
+    where not exists (
+      select 1
+      from public.teacher_students ts
+      where ts.teacher_id = auth.uid() and ts.student_id = student_id
+    )
+  ) then
+    raise exception 'Bạn chỉ có thể giao từ cho học viên của mình';
+  end if;
+
+  if exists (
+    select 1
+    from unnest(p_dictionary_entry_ids) as dictionary_entry_id
+    where not exists (
+      select 1
+      from public.dictionary_entries de
+      where de.id = dictionary_entry_id
+    )
+  ) then
+    raise exception 'Có từ không hợp lệ trong danh sách được chọn';
+  end if;
+
+  foreach v_student_id in array p_student_ids loop
+    foreach v_dictionary_entry_id in array p_dictionary_entry_ids loop
+      insert into public.vocabulary_assignments(teacher_id, student_id, dictionary_entry_id, status, start_at, priority, assigned_at)
+      values (auth.uid(), v_student_id, v_dictionary_entry_id, 'new', now(), 'medium', now())
+      on conflict (teacher_id, student_id, dictionary_entry_id)
+      do update set status = excluded.status, start_at = excluded.start_at, priority = excluded.priority, assigned_at = excluded.assigned_at, completed_at = null;
+    end loop;
+
+    insert into public.notifications(user_id, actor_id, type, title, message)
+    values (
+      v_student_id,
+      auth.uid(),
+      'vocabulary_assignment',
+      'Bạn có từ vựng mới được giao',
+      format('Giáo viên đã giao %s từ mới cho bạn.', coalesce(array_length(p_dictionary_entry_ids, 1), 0))
+    );
+  end loop;
+end;
+$$;
+
+grant execute on function public.assign_vocabulary_to_students(uuid[], uuid[]) to authenticated;
 
 create view public.accessible_courses with (security_invoker=true) as
 select c.* from public.courses c

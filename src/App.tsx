@@ -8,6 +8,7 @@ import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DeadlinesPage } from './pages/DeadlinesPage';
 import { FlashcardsPage } from './pages/FlashcardsPage';
+import { AIAssistantPage } from './features/ai/AIAssistantPage';
 import { DictionarySearchPage } from './features/dictionary/DictionarySearchPage';
 import { ImportExcelPage } from './pages/ImportExcelPage';
 import { LibraryPage } from './pages/LibraryPage';
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/assigned-words" element={<AssignedWordsPage />} />
       <Route path="/flashcards" element={<FlashcardsPage />} />
       <Route path="/quiz" element={<QuizPage />} />
+      <Route path="/ai-assistant" element={<AIAssistantPage />} />
       <Route path="/deadlines" element={<DeadlinesPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/assign-words" element={<TeacherOnly><AssignWordsPage /></TeacherOnly>} />

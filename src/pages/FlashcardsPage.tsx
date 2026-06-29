@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { RotateCcw, Volume2 } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { BookOpen, Layers3, RotateCcw, Sparkles, Volume2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { listStudyVocabulary, updateVocabularyLearningStatus } from '../services/data';
@@ -16,7 +16,27 @@ const SOURCE_OPTIONS: Array<{ value: StudyVocabularySource; label: string }> = [
 
 const COUNT_OPTIONS = [5, 10, 20] as const;
 
+const SOURCE_SUMMARY_LABELS: Record<StudyVocabularySource, string> = {
+  all: 'Tất cả từ',
+  new: 'Từ mới',
+  learning: 'Từ đang học',
+  difficult: 'Cần xem lại',
+  assigned: 'Từ được giao',
+};
+
 type FlashcardsStage = 'setup' | 'studying' | 'done';
+
+function getFlashcardsPaceLabel(cardCount: number): string {
+  return cardCount <= 5 ? 'Lật nhanh' : cardCount <= 10 ? 'Ôn nhanh' : 'Ôn sâu hơn';
+}
+
+function SetupFieldLabel({ icon, title }: { icon: ReactNode; title: string }) {
+  return <span className="study-field-label"><i>{icon}</i>{title}</span>;
+}
+
+function getFlashcardsActionLabel(source: StudyVocabularySource): string {
+  return source === 'difficult' ? 'Xem lại kỹ' : source === 'assigned' ? 'Theo lượt được giao' : 'Lật thẻ linh hoạt';
+}
 
 function playAudio(url: string | null) {
   if (!url) return;
@@ -96,23 +116,45 @@ export function FlashcardsPage() {
   if (stage === 'setup') {
     return <div className="page-wrap">
       <div className="page-heading"><div><span>Review session</span><h1>Flashcard ôn tập</h1><p>Chọn nhóm từ và bắt đầu một phiên học gọn nhẹ.</p></div></div>
-      <section className="panel quiz-panel study-setup-panel">
-        <div className="study-setup-grid">
-          <label className="manual-vocabulary-field">
-            <span>Nhóm từ</span>
+      <section className="panel quiz-panel study-setup-panel study-setup-card">
+        <div className="study-setup-intro">
+          <div>
+            <span className="eyebrow">Review ready</span>
+            <h2>Thiết lập phiên flashcard</h2>
+            <p>Chọn nhóm từ phù hợp và số lượng vừa sức để bắt đầu một lượt ôn tập nhanh, gọn và dễ theo dõi.</p>
+          </div>
+          <div className="study-setup-note">
+            <strong>Gợi ý</strong>
+            <span>Bắt đầu với 5–10 từ nếu bạn muốn ôn nhanh trong vài phút.</span>
+          </div>
+        </div>
+        <div className="study-setup-grid study-setup-grid-compact">
+          <label className="manual-vocabulary-field study-setup-field">
+            <SetupFieldLabel icon={<Layers3 size={14} />} title="Nhóm từ" />
+            <small>Chọn danh sách muốn ôn tập trước.</small>
             <select value={source} onChange={(event) => setSource(event.target.value as StudyVocabularySource)}>
               {SOURCE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
-          <label className="manual-vocabulary-field">
-            <span>Số lượng</span>
+          <label className="manual-vocabulary-field study-setup-field">
+            <SetupFieldLabel icon={<BookOpen size={14} />} title="Số lượng" />
+            <small>Số thẻ sẽ xuất hiện trong phiên này.</small>
             <select value={count} onChange={(event) => setCount(Number(event.target.value) as (typeof COUNT_OPTIONS)[number])}>
               {COUNT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
         </div>
-        {error && <div className="form-message standalone">{error}</div>}
-        <button className="button primary" onClick={() => void start()}>Bắt đầu học</button>
+        <div className="study-quick-card" aria-label="Thông tin nhanh của flashcards">
+          <div className="study-quick-chip"><strong>{count} từ</strong><span>{getFlashcardsPaceLabel(count)}</span></div>
+          <div className="study-quick-chip"><strong>{SOURCE_SUMMARY_LABELS[source]}</strong><span>Nhóm từ đang chọn</span></div>
+          <div className="study-quick-chip"><strong>{getFlashcardsActionLabel(source)}</strong><span>Lật thẻ và tự đánh giá</span></div>
+        </div>
+        <div className="study-setup-footer">
+          {error ? <div className="form-message standalone">{error}</div> : <div className="study-setup-hint">Bạn có thể đổi nhóm từ bất cứ lúc nào sau khi hoàn thành một phiên.</div>}
+          <div className="study-setup-actions">
+            <button className="button primary" onClick={() => void start()}>Bắt đầu học</button>
+          </div>
+        </div>
       </section>
     </div>;
   }

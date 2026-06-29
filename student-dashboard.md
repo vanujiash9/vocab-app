@@ -1,0 +1,115 @@
+- generic [ref=e419]:
+  - complementary [ref=e420]:
+    - generic [ref=e421]:
+      - generic [ref=e422]: VO
+      - generic [ref=e423]:
+        - strong [ref=e424]: Vocabulary OS
+        - generic [ref=e425]: IELTS study system
+      - button "Đóng menu" [ref=e426] [cursor=pointer]:
+        - img [ref=e427]
+    - paragraph [ref=e430]: Học tập
+    - navigation [ref=e431]:
+      - link "Dashboard" [ref=e432] [cursor=pointer]:
+        - /url: "#/dashboard"
+        - img [ref=e433]
+        - generic [ref=e436]: Dashboard
+      - link "Tra cứu từ" [ref=e437] [cursor=pointer]:
+        - /url: "#/lookup"
+        - img [ref=e438]
+        - generic [ref=e441]: Tra cứu từ
+      - link "Thư viện từ" [ref=e442] [cursor=pointer]:
+        - /url: "#/library"
+        - img [ref=e443]
+        - generic [ref=e445]: Thư viện từ
+      - link "Từ được giao" [ref=e446] [cursor=pointer]:
+        - /url: "#/assigned-words"
+        - img [ref=e447]
+        - generic [ref=e450]: Từ được giao
+      - link "Flashcard" [ref=e451] [cursor=pointer]:
+        - /url: "#/flashcards"
+        - img [ref=e452]
+        - generic [ref=e454]: Flashcard
+      - link "Quiz" [ref=e455] [cursor=pointer]:
+        - /url: "#/quiz"
+        - img [ref=e456]
+        - generic [ref=e460]: Quiz
+      - link "Deadline" [ref=e461] [cursor=pointer]:
+        - /url: "#/deadlines"
+        - img [ref=e462]
+        - generic [ref=e464]: Deadline
+      - link "Thông báo" [ref=e465] [cursor=pointer]:
+        - /url: "#/notifications"
+        - img [ref=e466]
+        - generic [ref=e469]: Thông báo
+    - generic [ref=e470]:
+      - generic [ref=e471]: Student
+      - strong [ref=e472]: Không gian học từ vựng
+      - paragraph [ref=e473]: Tra cứu, lưu từ, ôn flashcard và làm quiz mỗi ngày.
+    - generic [ref=e474]:
+      - link "TH" [ref=e475] [cursor=pointer]:
+        - /url: "#/profile"
+      - link "Thanh Vân vanxinh@gmail.com" [ref=e476] [cursor=pointer]:
+        - /url: "#/profile"
+        - strong [ref=e477]: Thanh Vân
+        - generic [ref=e478]: vanxinh@gmail.com
+      - link "Cài đặt" [ref=e479] [cursor=pointer]:
+        - /url: "#/settings"
+        - img [ref=e480]
+      - button "Đăng xuất" [ref=e483] [cursor=pointer]:
+        - img [ref=e484]
+  - main [ref=e487]:
+    - generic [ref=e488]:
+      - button "Mở menu" [ref=e489] [cursor=pointer]:
+        - img [ref=e490]
+      - strong [ref=e491]: Vocabulary OS
+      - generic [ref=e492]: student
+    - generic [ref=e493]:
+      - generic [ref=e495]:
+        - text: Profile dashboard
+        - heading "Xin chào, Thanh Vân" [level=1] [ref=e496]
+        - paragraph [ref=e497]: Theo dõi từ vựng, quiz, flashcard và các mốc học tập cá nhân.
+      - generic [ref=e498]:
+        - generic [ref=e499]:
+          - generic [ref=e500]: Vocabulary workspace
+          - heading "Học từ vựng thông minh cùng trợ lý dễ thương." [level=2] [ref=e501]
+          - paragraph [ref=e502]: Nhập từ mới, ôn flashcard, làm quiz và duy trì nhịp học mỗi ngày.
+        - generic "Trợ lý học tập 3D" [ref=e503]:
+          - generic [ref=e505]: Hôm nay mình học từ nào?
+          - generic [ref=e518]: A+
+      - generic [ref=e523]:
+        - article [ref=e524]:
+          - img [ref=e526]
+          - strong [ref=e529]: "2"
+          - generic [ref=e530]: Từ vựng
+        - article [ref=e531]:
+          - img [ref=e533]
+          - strong [ref=e536]: "2"
+          - generic [ref=e537]: Đã thuộc
+        - article [ref=e538]:
+          - img [ref=e540]
+          - strong [ref=e542]: "0"
+          - generic [ref=e543]: Khó nhớ
+        - article [ref=e544]:
+          - img [ref=e546]
+          - strong [ref=e550]: "0"
+          - generic [ref=e551]: Deadline mở
+      - generic [ref=e552]:
+        - article [ref=e553]:
+          - generic [ref=e555]:
+            - heading "Tiến độ từ vựng" [level=3] [ref=e556]
+            - paragraph [ref=e557]: Phân loại từ đã lưu trong thư viện cá nhân.
+          - generic [ref=e558]:
+            - generic [ref=e560]:
+              - generic [ref=e561]: Đã thuộc
+              - generic [ref=e562]: 100%
+            - generic [ref=e566]:
+              - generic [ref=e567]: Khó nhớ
+              - generic [ref=e568]: 0%
+            - generic [ref=e571]:
+              - generic [ref=e572]: Từ mới
+              - generic [ref=e573]: 0%
+        - article [ref=e575]:
+          - generic [ref=e577]:
+            - heading "Deadline sắp tới" [level=3] [ref=e578]
+            - paragraph [ref=e579]: Các mục tiêu chưa hoàn thành.
+          - paragraph [ref=e580]: Chưa có deadline nào.

@@ -16,6 +16,7 @@ export type Database = {
           examples: Json;
           synonyms: Json;
           antonyms: Json;
+          collocations: Json;
           provider: string;
           raw_response: Json | null;
           created_at: string;
@@ -33,6 +34,7 @@ export type Database = {
           examples?: Json;
           synonyms?: Json;
           antonyms?: Json;
+          collocations?: Json;
           provider?: string;
           raw_response?: Json | null;
           created_at?: string;
@@ -86,6 +88,58 @@ export type Database = {
         };
         Update: Partial<Database['public']['Tables']['teacher_vocabulary']['Insert']>;
       };
+      vocabulary_assignments: {
+        Row: {
+          id: string;
+          teacher_id: string;
+          student_id: string;
+          dictionary_entry_id: string;
+          status: Database['public']['Enums']['vocabulary_status'];
+          note: string | null;
+          start_at: string;
+          due_at: string | null;
+          priority: 'low' | 'medium' | 'high';
+          assigned_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          teacher_id?: string;
+          student_id: string;
+          dictionary_entry_id: string;
+          status?: Database['public']['Enums']['vocabulary_status'];
+          note?: string | null;
+          start_at?: string;
+          due_at?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          assigned_at?: string;
+          completed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['vocabulary_assignments']['Insert']>;
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          actor_id: string | null;
+          type: string;
+          title: string;
+          message: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          actor_id?: string | null;
+          type: string;
+          title: string;
+          message?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
+      };
       vocabulary: {
         Row: {
           id: string;
@@ -137,7 +191,7 @@ export type Database = {
     };
     Enums: {
       user_role: 'teacher' | 'student';
-      vocabulary_status: 'new' | 'known' | 'difficult';
+      vocabulary_status: 'new' | 'learning' | 'known' | 'difficult';
     };
   };
 };
