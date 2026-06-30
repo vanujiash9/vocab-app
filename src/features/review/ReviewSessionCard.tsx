@@ -37,7 +37,7 @@ export function ReviewSessionCard({
   return <article className="panel review-setup-card">
     <div className="review-setup-header">
       <h2>Tạo phiên ôn tập</h2>
-      <p>Chọn nguồn từ, thời lượng, cách bắt đầu và các từ bạn muốn đưa vào phiên học.</p>
+      <p>Chọn nhanh nguồn từ, thời lượng và danh sách từ để bắt đầu.</p>
     </div>
 
     <ReviewSourceSelector selectedSource={selectedSource} onSelect={onSelectSource} />
@@ -80,7 +80,7 @@ export function ReviewSessionCard({
       <button className="button primary" disabled={loading || loadingWords || !selectedWordIds.length} onClick={onStart}>
         <Sparkles size={17} /> {loading ? 'Đang chuẩn bị phiên ôn tập...' : 'Bắt đầu ôn tập'}
       </button>
-      <p>Bạn có thể chuyển giữa Flashcard và Quiz trong cùng phiên học.</p>
+      <p>Bạn có thể đổi giữa Flashcard và Quiz trong lúc học.</p>
     </div>
   </article>;
 }

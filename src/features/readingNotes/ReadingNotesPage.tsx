@@ -20,6 +20,7 @@ export function ReadingNotesPage() {
   const [draftPassage, setDraftPassage] = useState('');
   const [passage, setPassage] = useState('');
   const [tokens, setTokens] = useState<ReadingToken[]>([]);
+  const [isEditingPassage, setIsEditingPassage] = useState(false);
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
   const [selectedWord, setSelectedWord] = useState('');
   const [selectedSentence, setSelectedSentence] = useState('');
@@ -34,6 +35,7 @@ export function ReadingNotesPage() {
   const currentCacheItem = currentCacheKey ? analysisCache[currentCacheKey] ?? null : null;
   const analysisResult = currentCacheItem?.result ?? null;
   const saved = currentCacheItem?.saved ?? false;
+  const hasStartedReading = tokens.length > 0;
   const savedTokenIndexes = useMemo(() => tokens.reduce<number[]>((items, token) => {
     if (!isWordToken(token)) return items;
     if (!Object.values(analysisCache).some((item) => item.saved && item.result.normalizedWord === token.normalized)) {
@@ -55,6 +57,7 @@ export function ReadingNotesPage() {
     setInputError('');
     setPassage(nextPassage);
     setTokens(tokenizePassage(nextPassage));
+    setIsEditingPassage(false);
     setSelectedTokenIndex(null);
     setSelectedWord('');
     setSelectedSentence('');
@@ -138,8 +141,14 @@ export function ReadingNotesPage() {
     </div>
     <section className="reading-notes-layout">
       <div className="reading-notes-main">
-        <ReadingInputCard passage={draftPassage} error={inputError} onChange={setDraftPassage} onStart={startReading} />
-        {tokens.length > 0 && <ReadingTextViewer
+        {(!hasStartedReading || isEditingPassage) ? <ReadingInputCard passage={draftPassage} error={inputError} onChange={setDraftPassage} onStart={startReading} /> : <section className="panel reading-toolbar-card">
+          <div>
+            <strong>Đang đọc đoạn văn</strong>
+            <p>Chọn từ ở cột trái để xem AI giải thích ở cột phải.</p>
+          </div>
+          <button className="button secondary" onClick={() => setIsEditingPassage(true)}>Chỉnh sửa đoạn văn</button>
+        </section>}
+        {hasStartedReading && <ReadingTextViewer
           tokens={tokens}
           selectedTokenIndex={selectedTokenIndex}
           savedTokenIndexes={savedTokenIndexes}

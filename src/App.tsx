@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
-import { AssignedWordsPage } from './pages/AssignedWordsPage';
 import { AssignWordsPage } from './pages/AssignWordsPage';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -31,7 +30,7 @@ export default function App() {
       <Route path="/lookup" element={<DictionarySearchPage />} />
       <Route path="/library" element={<LibraryPage />} />
       <Route path="/reading-notes" element={<ReadingNotesPage />} />
-      <Route path="/assigned-words" element={<AssignedWordsPage />} />
+      <Route path="/assigned-words" element={<Navigate to="/library?filter=assigned" replace />} />
       <Route path="/review" element={<ReviewPage />} />
       <Route path="/flashcards" element={<Navigate to="/review" replace />} />
       <Route path="/quiz" element={<Navigate to="/review" replace />} />

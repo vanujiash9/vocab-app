@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { EmptyState, LoadingState } from '../components/PageState';
 import { listStudyVocabulary, saveQuizAttempt, updateVocabularyLearningStatus } from '../services/data';
@@ -38,7 +38,9 @@ function uniqueWords(items: StudyVocabularyItem[]): StudyVocabularyItem[] {
 
 export function ReviewPage() {
   const { user } = useAuth();
-  const [selectedSource, setSelectedSource] = useState<Exclude<StudyVocabularySource, 'new'>>('all');
+  const [searchParams] = useSearchParams();
+  const initialSource = searchParams.get('source') === 'assigned' ? 'assigned' : 'all';
+  const [selectedSource, setSelectedSource] = useState<Exclude<StudyVocabularySource, 'new'>>(initialSource);
   const [selectedDuration, setSelectedDuration] = useState<(typeof DURATION_OPTIONS)[number]>(15);
   const [selectedMode, setSelectedMode] = useState<ReviewMode>('flashcard');
   const [availableWords, setAvailableWords] = useState<StudyVocabularyItem[]>([]);
@@ -298,7 +300,7 @@ export function ReviewPage() {
           <EmptyState title="Chưa có từ phù hợp để ôn tập." description={buildEmptyDescription(selectedSource)} />
           <div className="status-actions">
             <Link className="button secondary" to="/library">Thêm từ vào thư viện</Link>
-            <Link className="button secondary" to="/assigned-words">Xem từ được giao</Link>
+            <Link className="button secondary" to="/library?filter=assigned">Xem từ được giao</Link>
           </div>
         </div>
       </section>;

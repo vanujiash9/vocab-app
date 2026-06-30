@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
-import { Bell, BookText, Bot, CalendarDays, FileSpreadsheet, Home, Library, LogOut, Menu, RotateCcw, Search, Send, Settings, Upload, Users, X } from 'lucide-react';
+import { Bell, BookText, Bot, CalendarDays, FileSpreadsheet, Home, Library, LogOut, Menu, RotateCcw, Search, Settings, Upload, Users, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getUnreadNotificationCount } from '../services/data';
@@ -9,8 +9,7 @@ const studentNav = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
   { to: '/lookup', label: 'Tra cứu từ', icon: Search },
   { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookText },
-  { to: '/library', label: 'Thư viện từ', icon: Library },
-  { to: '/assigned-words', label: 'Từ được giao', icon: Send },
+  { to: '/library', label: 'Từ vựng', icon: Library },
   { to: '/review', label: 'Ôn tập', icon: RotateCcw },
   { to: '/ai-assistant', label: 'Trợ lý AI', icon: Bot },
   { to: '/deadlines', label: 'Deadline', icon: CalendarDays },
