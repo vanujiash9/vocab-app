@@ -1,4 +1,5 @@
-import { ArrowDownAZ, ArrowUpAZ, Clock3, Search } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpAZ, ChevronDown, ChevronUp, Clock3, Search } from 'lucide-react';
+import { useState } from 'react';
 import { EmptyState } from '../../../components/PageState';
 import type { UnifiedStudentVocabularyItem, UnifiedVocabularyFilter } from '../../../services/vocabulary';
 import type { StudentVocabularyQuickFilter, StudentVocabularySort } from './StudentVocabularyPage';
@@ -50,6 +51,8 @@ function getSortIcon(sort: StudentVocabularySort) {
 }
 
 interface StudentVocabularyListProps {
+  heading: string;
+  description: string;
   items: UnifiedStudentVocabularyItem[];
   expandedItemId: string | null;
   filter: UnifiedVocabularyFilter;
@@ -70,6 +73,8 @@ interface StudentVocabularyListProps {
 }
 
 export function StudentVocabularyList({
+  heading,
+  description,
   items,
   expandedItemId,
   filter,
@@ -93,6 +98,7 @@ export function StudentVocabularyList({
   const sortOptions = filter === 'assigned'
     ? SORT_OPTIONS.filter((item) => item.value !== 'recent')
     : SORT_OPTIONS.filter((item) => item.value !== 'assigned-recent');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   return <section className="student-vocabulary-list-section compact">
     <div className="panel student-vocabulary-toolbar">
@@ -100,7 +106,15 @@ export function StudentVocabularyList({
         {FILTER_OPTIONS.map((item) => <button key={item.value} className={filter === item.value ? 'active' : ''} onClick={() => onFilterChange(item.value)}>{item.label}</button>)}
       </div>
 
-      <div className="student-vocabulary-toolbar-main">
+      <div className="student-vocabulary-toolbar-main student-vocabulary-toolbar-main-compact">
+        <div className="search-bar student-vocabulary-search-bar"><Search size={18} /><input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={filter === 'assigned' ? 'Tìm trong từ được giao...' : 'Tìm từ, nghĩa Anh hoặc nghĩa Việt...'} /></div>
+        <button className="button secondary small student-vocabulary-advanced-toggle" type="button" onClick={() => setShowAdvancedFilters((current) => !current)}>
+          {showAdvancedFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {showAdvancedFilters ? 'Ẩn bộ lọc nâng cao' : 'Bộ lọc nâng cao'}
+        </button>
+      </div>
+
+      {showAdvancedFilters && <div className="student-vocabulary-toolbar-advanced">
         {showQuickFilter && <div className="student-vocabulary-toolbar-select">
           <span>Ưu tiên</span>
           <select value={quickFilter} onChange={(event) => onQuickFilterChange(event.target.value as StudentVocabularyQuickFilter)}>
@@ -116,14 +130,13 @@ export function StudentVocabularyList({
             </select>
           </div>
         </div>
-        <div className="search-bar student-vocabulary-search-bar"><Search size={18} /><input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={filter === 'assigned' ? 'Tìm trong từ được giao...' : 'Tìm từ, nghĩa Anh hoặc nghĩa Việt...'} /></div>
-      </div>
+      </div>}
     </div>
 
     <div className="student-vocabulary-list-heading compact">
       <div>
-        <h3>{filter === 'assigned' ? 'Từ được giao' : 'Từ vựng tự tìm'}</h3>
-        <p>{resultSummary}</p>
+        <h3>{heading}</h3>
+        <p>{description} · {resultSummary}</p>
       </div>
     </div>
 
@@ -143,8 +156,7 @@ export function StudentVocabularyList({
                 </div>
               </div>
               <span className="student-vocabulary-subline">{[item.partOfSpeech, item.source === 'assigned' ? 'Được giao' : 'Thư viện', dueLabel ? `Hạn ${dueLabel}` : assignedLabel ? `Giao ${assignedLabel}` : ''].filter(Boolean).join(' · ')}</span>
-              <p className="student-vocabulary-preview-line">{truncate(item.englishDefinition, 88)}</p>
-              {item.vietnameseMeaning && <small className="student-vocabulary-preview-line secondary">{truncate(item.vietnameseMeaning, 64)}</small>}
+              <p className="student-vocabulary-preview-line">{truncate(item.vietnameseMeaning || item.englishDefinition, 88)}</p>
             </div>
           </button>
 
@@ -154,3 +166,6 @@ export function StudentVocabularyList({
     </div> : <div className="panel student-vocabulary-empty-panel"><EmptyState title={emptyTitle} description={emptyDescription} /></div>}
   </section>;
 }
+
+// ponytail: one list heading is enough; filter state lives in the toolbar instead of becoming another title.
+// ponytail: advanced filters are hidden by default to reduce visual noise; expose them only when users need control.

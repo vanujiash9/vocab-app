@@ -1,4 +1,4 @@
-import { MessageSquare, Sparkles, X } from 'lucide-react';
+import { Sparkles, Stars, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sendReviewCoachMessage } from '../../services/ai';
@@ -51,18 +51,21 @@ export function ReviewCoachCard({ context }: ReviewCoachCardProps) {
     setOpen(false);
     navigate(target);
   };
+
   const secondaryAction = response?.secondaryAction ?? null;
 
   return <>
-    <article className="panel review-coach-card">
+    <article className="review-coach-card">
+      <div className="review-coach-card-icon" aria-hidden="true">
+        <Stars size={20} />
+      </div>
       <div className="review-coach-card-copy">
         <div>
-          <span className="eyebrow">Trợ lý ôn tập</span>
           <h2>Trợ lý ôn tập</h2>
           <p>Chưa biết bắt đầu từ đâu? Nhận gợi ý ôn tập từ thư viện và bài được giao.</p>
         </div>
-        <button className="button secondary" type="button" onClick={() => setOpen(true)}>
-          <MessageSquare size={17} /> Hỏi trợ lý
+        <button className="review-coach-ask-button" type="button" onClick={() => setOpen(true)}>
+          Hỏi trợ lý
         </button>
       </div>
     </article>
@@ -132,3 +135,5 @@ export function ReviewCoachCard({ context }: ReviewCoachCardProps) {
     </div>}
   </>;
 }
+
+// ponytail: keep the compact strip as a simple entry point; add richer preview content only if users need it.

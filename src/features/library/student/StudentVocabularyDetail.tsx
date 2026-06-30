@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2, Volume2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Volume2 } from 'lucide-react';
 import type { UnifiedStudentVocabularyItem } from '../../../services/vocabulary';
 import type { VocabularyStatus } from '../../../types';
 
@@ -18,6 +19,8 @@ interface StudentVocabularyDetailProps {
 }
 
 export function StudentVocabularyDetail({ item, onPlayAudio, onChangeStatus, onDelete }: StudentVocabularyDetailProps) {
+  const [showMore, setShowMore] = useState(false);
+
   return <div className="student-vocabulary-detail">
     <div className="detail-title">
       <div>
@@ -40,19 +43,27 @@ export function StudentVocabularyDetail({ item, onPlayAudio, onChangeStatus, onD
     </div>
 
     <div className="detail-block">
-      <h4>Ví dụ</h4>
-      {item.examples.length ? <ul>{item.examples.slice(0, 3).map((example) => <li key={example}>{example}</li>)}</ul> : <p>Chưa có ví dụ.</p>}
-    </div>
-
-    {item.teacherNote && <div className="detail-block"><h4>Ghi chú giáo viên</h4><p>{item.teacherNote}</p></div>}
-    {item.personalNote && <div className="detail-block"><h4>Ghi chú cá nhân</h4><p>{item.personalNote}</p></div>}
-
-    <div className="detail-block">
       <h4>Cập nhật trạng thái</h4>
       <div className="status-actions">
         {(['new', 'learning', 'difficult', 'known'] as const).map((status) => <button key={status} className={item.status === status ? 'button primary' : 'button secondary'} onClick={() => onChangeStatus(item, status)}>{STATUS_LABELS[status]}</button>)}
       </div>
     </div>
+
+    {(item.examples.length > 0 || item.teacherNote || item.personalNote) && <div className="detail-block student-vocabulary-more-block">
+      <button className="text-button student-vocabulary-more-toggle" type="button" onClick={() => setShowMore((current) => !current)}>
+        {showMore ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {showMore ? 'Thu gọn chi tiết' : 'Xem thêm chi tiết'}
+      </button>
+
+      {showMore && <div className="student-vocabulary-more-content">
+        <div className="detail-block">
+          <h4>Ví dụ</h4>
+          {item.examples.length ? <ul>{item.examples.slice(0, 3).map((example) => <li key={example}>{example}</li>)}</ul> : <p>Chưa có ví dụ.</p>}
+        </div>
+        {item.teacherNote && <div className="detail-block"><h4>Ghi chú giáo viên</h4><p>{item.teacherNote}</p></div>}
+        {item.personalNote && <div className="detail-block"><h4>Ghi chú cá nhân</h4><p>{item.personalNote}</p></div>}
+      </div>}
+    </div>}
 
     <div className="status-actions student-vocabulary-detail-actions">
       <Link className="button secondary" to={item.source === 'assigned' ? '/review?source=assigned' : `/review?source=${item.status === 'new' ? 'all' : item.status}`}>Ôn tập từ này</Link>
@@ -60,3 +71,5 @@ export function StudentVocabularyDetail({ item, onPlayAudio, onChangeStatus, onD
     </div>
   </div>;
 }
+
+// ponytail: only secondary sections collapse; keep the main meanings and primary actions always visible.

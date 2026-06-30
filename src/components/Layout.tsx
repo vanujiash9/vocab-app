@@ -23,7 +23,6 @@ const teacherNav = [
   { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookText },
   { to: '/library', label: 'Kho từ vựng', icon: Library },
   { to: '/assign-words', label: 'Giao từ', icon: Upload },
-  { to: '/ai-assistant', label: 'Trợ lý AI', icon: Bot },
   { to: '/import-excel', label: 'Import Excel', icon: FileSpreadsheet },
   { to: '/students', label: 'Học viên', icon: Users },
   { to: '/notifications', label: 'Thông báo', icon: Bell },

@@ -77,10 +77,13 @@ export function ReviewSessionCard({
     </div>
 
     <div className="review-setup-actions">
-      <button className="button primary" disabled={loading || loadingWords || !selectedWordIds.length} onClick={onStart}>
+      <button className="button primary review-start-button" disabled={loading || loadingWords || !selectedWordIds.length} onClick={onStart}>
         <Sparkles size={17} /> {loading ? 'Đang chuẩn bị phiên ôn tập...' : 'Bắt đầu ôn tập'}
       </button>
-      <p>Bạn có thể đổi giữa Flashcard và Quiz trong lúc học.</p>
+      <p className="review-setup-hint">Bạn có thể đổi giữa Flashcard và Quiz trong lúc học.</p>
     </div>
   </article>;
 }
+
+// ponytail: setup stays one card because only the student review screen uses this exact composition.
+// add smaller extracted pieces only if another page repeats the same structure.

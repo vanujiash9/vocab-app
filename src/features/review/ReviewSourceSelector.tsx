@@ -13,10 +13,12 @@ interface ReviewSourceSelectorProps {
 }
 
 export function ReviewSourceSelector({ selectedSource, onSelect }: ReviewSourceSelectorProps) {
-  return <div className="ai-control-group">
-    <h4>Nguồn từ</h4>
-    <div className="filter-row ai-filter-row">
-      {SOURCE_OPTIONS.map((option) => <button key={option.value} className={selectedSource === option.value ? 'active' : ''} onClick={() => onSelect(option.value)}>{option.label}</button>)}
+  return <div className="review-setup-group">
+    <h3>Nguồn từ</h3>
+    <div className="review-chip-row" role="group" aria-label="Chọn nguồn từ ôn tập">
+      {SOURCE_OPTIONS.map((option) => <button key={option.value} type="button" className={selectedSource === option.value ? 'active' : ''} onClick={() => onSelect(option.value)}>{option.label}</button>)}
     </div>
   </div>;
 }
+
+// ponytail: source pills stay inline here; extract a shared pill group only if another screen needs the same markup.

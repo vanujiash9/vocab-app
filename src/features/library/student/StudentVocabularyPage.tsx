@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { ErrorState, LoadingState } from '../../../components/PageState';
 import { useAuth } from '../../../contexts/AuthContext';
 import { VocabularyManualForm } from '../../vocabulary-manual/VocabularyManualForm';
@@ -77,6 +77,7 @@ export function StudentVocabularyPage({ initialFilter, onFilterParamChange }: St
   const [quickFilter, setQuickFilter] = useState<StudentVocabularyQuickFilter>('all');
   const [sort, setSort] = useState<StudentVocabularySort>(getDefaultSort(initialFilter));
   const [showManualForm, setShowManualForm] = useState(false);
+  const [showAssignedSection, setShowAssignedSection] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -122,7 +123,7 @@ export function StudentVocabularyPage({ initialFilter, onFilterParamChange }: St
     return sortItems(nextItems, nextSort);
   }, [filter, items, query, quickFilter, sort]);
 
-  const assignedPreviewItems = useMemo(() => sortItems(items.filter((item) => item.source === 'assigned'), 'assigned-recent').slice(0, 12), [items]);
+  const assignedPreviewItems = useMemo(() => sortItems(items.filter((item) => item.source === 'assigned'), 'assigned-recent').slice(0, 4), [items]);
   const selfFoundItems = useMemo(() => filteredItems.filter((item) => item.source === 'library'), [filteredItems]);
   const listItems = filter === 'all' ? selfFoundItems : filteredItems;
 
@@ -230,26 +231,30 @@ export function StudentVocabularyPage({ initialFilter, onFilterParamChange }: St
     {message && <div className="form-message standalone">{message}</div>}
     <VocabularyManualForm role="student" open={showManualForm} onSubmit={saveManual} onClose={() => setShowManualForm(false)} />
 
-    <section className="student-vocabulary-section">
-      <div className="student-vocabulary-section-header">
-        <h2>Từ được giao</h2>
-        <p>Từ giáo viên giao gần đây để bạn ưu tiên học trước.</p>
+    <section className="student-vocabulary-section student-vocabulary-section-collapsible">
+      <div className="student-vocabulary-section-header student-vocabulary-section-header-toggle student-vocabulary-section-header-muted">
+        <div>
+          <h2>Từ được giao</h2>
+          <p>{overview.assignedCount} từ để ưu tiên học trước.</p>
+        </div>
+        <button className="button secondary small" type="button" onClick={() => setShowAssignedSection((current) => !current)}>
+          {showAssignedSection ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {showAssignedSection ? 'Ẩn bớt' : 'Xem nhanh'}
+        </button>
       </div>
-      <StudentVocabularyAssignedCard
+      {showAssignedSection ? <StudentVocabularyAssignedCard
         assignedCount={overview.assignedCount}
         dueSoonCount={overview.dueSoonCount}
         items={assignedPreviewItems}
         onShowAssignedList={showAssignedList}
         onOpenAssignedItem={openAssignedItem}
-      />
+      /> : null}
     </section>
 
-    <section ref={listRef} className="student-vocabulary-section">
-      <div className="student-vocabulary-section-header">
-        <h2>Từ vựng tự tìm</h2>
-        <p>Danh sách từ bạn đã lưu từ tra cứu và ghi chú cá nhân.</p>
-      </div>
+    <section ref={listRef} className="student-vocabulary-section student-vocabulary-main-section">
       <StudentVocabularyList
+        heading="Thư viện từ của bạn"
+        description="Từ bạn đã lưu từ tra cứu và ghi chú cá nhân."
         items={listItems}
         expandedItemId={expandedItemId}
         filter={filter}
@@ -270,6 +275,6 @@ export function StudentVocabularyPage({ initialFilter, onFilterParamChange }: St
       />
     </section>
 
-    {/* ponytail: list filter still supports assigned items to avoid rewriting the existing unified behavior; split sections stay visually clear. */}
+    {/* ponytail: the assigned section is collapsible to reduce default clutter while keeping the current data flow intact. */}
   </div>;
 }

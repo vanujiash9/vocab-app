@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, ClipboardCheck, Sparkles } from 'lucide-react';
 import { EmptyState } from '../../components/PageState';
-import { getStudentModeLabel } from './ai.utils';
+import { useAuth } from '../../contexts/AuthContext';
 import { AIResultCard } from './AIResultCard';
 import { getStudentStudyOrganizer } from '../../services/ai';
 import type { StudentAIRecommendedMode, StudentAIStudyResult, StudentAIWordSource } from './ai.types';
@@ -78,6 +78,7 @@ function getSectionDisplayTitle(index: number): string {
 
 export function StudentAIStudyCard() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [minutes, setMinutes] = useState<number>(15);
   const [source, setSource] = useState<StudentAIWordSource>('all');
   const [goal, setGoal] = useState<StudyGoal>('review');
@@ -86,15 +87,19 @@ export function StudentAIStudyCard() {
   const [error, setError] = useState('');
 
   const generate = async () => {
-    console.log('[StudentAIStudyCard] generate', { minutes, source });
+    if (authLoading) return;
+    if (!user) {
+      setError('Bạn cần đăng nhập lại để dùng trợ lý AI.');
+      setResult(null);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
       const data = await getStudentStudyOrganizer({ minutes, source });
-      console.log('[StudentAIStudyCard] success', data);
       setResult(data.result);
     } catch (err) {
-      console.error('[StudentAIStudyCard] error', err);
       setError(err instanceof Error ? err.message : 'Không tạo được gợi ý học.');
       setResult(null);
     } finally {
@@ -102,6 +107,7 @@ export function StudentAIStudyCard() {
     }
   };
 
+  const isGenerateDisabled = loading || authLoading || !user;
   const primaryAction = result ? getPrimaryAction(result.recommendedMode) : 'flashcard';
 
   return <section className="ai-assistant-grid">
@@ -140,7 +146,7 @@ export function StudentAIStudyCard() {
       {error && <div className="form-message standalone">{error}</div>}
 
       <div className="ai-control-footer">
-        <button className="button primary" disabled={loading} onClick={() => void generate()}>
+        <button className="button primary" disabled={isGenerateDisabled} onClick={() => void generate()}>
           <Sparkles size={17} /> {loading ? 'Đang tạo kế hoạch...' : '✨ Tạo kế hoạch học'}
         </button>
         <p className="ai-control-note">AI chỉ dùng từ vựng có trong thư viện và bài được giao của bạn.</p>

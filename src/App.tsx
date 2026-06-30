@@ -22,6 +22,11 @@ function TeacherOnly({ children }: { children: React.ReactNode }) {
   return profile?.role === 'teacher' ? children : <Navigate to="/dashboard" replace />;
 }
 
+function StudentOnly({ children }: { children: React.ReactNode }) {
+  const { profile } = useAuth();
+  return profile?.role === 'student' ? children : <Navigate to="/dashboard" replace />;
+}
+
 export default function App() {
   return <Routes>
     <Route path="/auth" element={<AuthPage />} />
@@ -31,10 +36,10 @@ export default function App() {
       <Route path="/library" element={<LibraryPage />} />
       <Route path="/reading-notes" element={<ReadingNotesPage />} />
       <Route path="/assigned-words" element={<Navigate to="/library?filter=assigned" replace />} />
-      <Route path="/review" element={<ReviewPage />} />
+      <Route path="/review" element={<StudentOnly><ReviewPage /></StudentOnly>} />
       <Route path="/flashcards" element={<Navigate to="/review" replace />} />
       <Route path="/quiz" element={<Navigate to="/review" replace />} />
-      <Route path="/ai-assistant" element={<AIAssistantPage />} />
+      <Route path="/ai-assistant" element={<StudentOnly><AIAssistantPage /></StudentOnly>} />
       <Route path="/deadlines" element={<DeadlinesPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/assign-words" element={<TeacherOnly><AssignWordsPage /></TeacherOnly>} />
