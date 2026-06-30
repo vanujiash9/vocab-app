@@ -169,6 +169,42 @@ export interface Deadline {
 export type StudyVocabularySource = 'all' | 'new' | 'learning' | 'difficult' | 'assigned';
 export type StudyVocabularyRecordType = 'library' | 'assigned';
 export type QuizMode = 'definition' | 'word';
+export type ReviewCoachTask = 'student_review_chat';
+export type ReviewCoachAnswerType = 'review_recommendation' | 'out_of_scope';
+export type ReviewCoachActivity = 'flashcard' | 'quiz' | 'review';
+
+export interface ReviewCoachContext {
+  source: Exclude<StudyVocabularySource, 'new'>;
+  duration: number;
+}
+
+export interface ReviewCoachAction {
+  label: string;
+  target: string;
+}
+
+export interface ReviewCoachGroup {
+  title: string;
+  words: string[];
+  activity: ReviewCoachActivity;
+  reason: string;
+}
+
+export interface ReviewCoachResponse {
+  answerType: ReviewCoachAnswerType;
+  message: string;
+  reason: string;
+  groups: ReviewCoachGroup[];
+  quickTip: string;
+  primaryAction: ReviewCoachAction;
+  secondaryAction: ReviewCoachAction | null;
+}
+
+export interface ReviewCoachRequest {
+  task: ReviewCoachTask;
+  message: string;
+  context: ReviewCoachContext;
+}
 
 export interface StudyVocabularyItem {
   id: string;

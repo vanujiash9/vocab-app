@@ -11,6 +11,7 @@ import { ReviewQuizMode } from '../features/review/ReviewQuizMode';
 import { ReviewSessionCard } from '../features/review/ReviewSessionCard';
 import { ReviewSummary } from '../features/review/ReviewSummary';
 import { buildQuestions, buildQuizPool, buildWrongAnswers, type ReviewQuizQuestion } from '../features/review/reviewQuiz.utils';
+import { ReviewCoachCard } from '../features/review/ReviewCoachCard';
 
 const DURATION_OPTIONS = [10, 15, 30] as const;
 const SESSION_LIMIT_BY_DURATION: Record<(typeof DURATION_OPTIONS)[number], number> = {
@@ -274,8 +275,9 @@ export function ReviewPage() {
 
   if (!user) return <LoadingState />;
 
-  const renderSetupView = () => <section className="review-shell review-setup-shell">
+  const renderSetupView = () => <section className="review-shell review-setup-shell review-setup-stack">
     {error && <div className="form-message standalone">{error}</div>}
+    <ReviewCoachCard context={{ source: selectedSource, duration: selectedDuration }} />
     <ReviewSessionCard
       selectedSource={selectedSource}
       selectedDuration={selectedDuration}
