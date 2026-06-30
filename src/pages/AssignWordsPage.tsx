@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { CalendarDays, CheckSquare, Search, Send, Users, X } from 'lucide-react';
+import { CalendarDays, Search, Send, Users, X } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 import { useAuth } from '../contexts/AuthContext';
-import { getAssignableVocabularyForStudent, getAssignedVocabularyForStudent, getTeacherStudents, createVocabularyAssignments, type AssignableDifficultyFilter, type AssignableSort } from '../services/assignments';
+import {
+  createVocabularyAssignments,
+  getAssignableVocabularyForStudent,
+  getAssignedVocabularyForStudent,
+  getTeacherStudents,
+  type AssignableDifficultyFilter,
+  type AssignableSort,
+} from '../services/assignments';
 import type { TeacherStudent, TeacherVocabularyItem, VocabularyAssignment } from '../types';
 
 const ASSIGN_FILTER_OPTIONS: Array<{ value: 'unassigned' | 'recent' | AssignableDifficultyFilter; label: string }> = [
@@ -47,6 +54,11 @@ function buildAssignSuccessMessage(createdAssignments: number, studentName: stri
     return `Đã giao ${createdAssignments} từ mới cho ${studentName}. Bỏ qua ${skippedCount} từ đã được giao trước đó.`;
   }
   return `Đã giao ${createdAssignments} từ cho ${studentName}.`;
+}
+
+function buildAssignButtonLabel(count: number, assigning: boolean): string {
+  if (assigning) return 'Đang giao từ...';
+  return `Giao ${count} từ`;
 }
 
 export function AssignWordsPage() {
@@ -152,6 +164,7 @@ export function AssignWordsPage() {
     setAssigning(true);
     setMessage('');
     setError('');
+
     try {
       const result = await createVocabularyAssignments({
         teacherId: user.id,
@@ -160,10 +173,12 @@ export function AssignWordsPage() {
         note: teacherNote,
         dueDate: dueDate || null,
       });
+
       setMessage(buildAssignSuccessMessage(result.createdAssignments, selectedStudent.student_name, result.skippedExistingAssignments));
       setSelectedWords([]);
       setTeacherNote('');
       setDueDate('');
+
       const [assignable, assigned] = await Promise.all([
         getAssignableVocabularyForStudent(user.id, selectedStudentId, {
           search: query,
@@ -173,6 +188,7 @@ export function AssignWordsPage() {
         }),
         getAssignedVocabularyForStudent(selectedStudentId),
       ]);
+
       setAvailableWords(assignable.availableWords);
       setAssignedWords(assigned);
     } catch (err) {
@@ -186,24 +202,35 @@ export function AssignWordsPage() {
   if (loading) return <LoadingState />;
   if (error && !students.length) return <ErrorState message={error} retry={() => window.location.reload()} />;
 
-  return <div className="page-wrap assign-page-wrap">
-    <div className="page-heading assign-page-heading">
+  return <div className="page-wrap assign-page-wrap reference-layout">
+    <div className="page-heading assign-page-heading compact simple">
       <div>
-        <span>Teacher assignment</span>
         <h1>Giao từ</h1>
-        <p>Chọn học viên, lọc từ phù hợp và giao một nhóm từ trong kho của bạn.</p>
       </div>
     </div>
 
     {message && <div className="form-message standalone">{message}</div>}
     {error && <div className="form-message standalone">{error}</div>}
 
-    <section className="panel assign-step-card">
-      <div className="assign-step-header">
-        <h2>Bước 1 — Chọn học viên</h2>
-        <p>Chọn một học viên để xem các từ có thể giao.</p>
+    <section className="panel assign-reference-panel">
+      <div className="assign-reference-header">
+        <div>
+          <h2>Giao từ</h2>
+          <p>{selectedStudent ? `${selectedStudent.student_name} · ${selectedStudent.student_email}` : 'Chọn học viên để bắt đầu giao từ.'}</p>
+        </div>
+        {selectedStudent && <div className="assign-reference-stats">
+          <div className="assign-reference-stat neutral">
+            <strong>{assignedWords.length}</strong>
+            <span>đã giao</span>
+          </div>
+          <div className="assign-reference-stat accent">
+            <strong>{availableWords.length}</strong>
+            <span>có thể giao</span>
+          </div>
+        </div>}
       </div>
-      <div className="assign-student-selector">
+
+      <div className="assign-reference-filters">
         <select value={selectedStudentId} onChange={(event) => {
           setSelectedStudentId(event.target.value);
           setSelectedWords([]);
@@ -212,87 +239,67 @@ export function AssignWordsPage() {
           <option value="">Chọn học viên</option>
           {students.map((student) => <option key={student.id} value={student.student_id}>{student.student_name} · {student.student_email}</option>)}
         </select>
-        {selectedStudent && <div className="assign-student-summary"><Users size={16} /> Đã giao: {assignedWords.length} từ · Có thể giao: {availableWords.length} từ</div>}
+        <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value as 'unassigned' | 'recent' | AssignableDifficultyFilter)}>
+          {ASSIGN_FILTER_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+        </select>
+        <select value={sort} className="sort" onChange={(event) => setSort(event.target.value as AssignableSort)}>
+          {ASSIGN_SORT_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+        </select>
       </div>
-    </section>
 
-    {!selectedStudent ? <section className="panel assign-empty-panel">
-      <EmptyState title="Chọn học viên để xem các từ có thể giao." description="Sau khi chọn học viên, danh sách sẽ chỉ hiển thị các từ chưa từng giao cho học viên đó." />
-    </section> : <>
-      <section className="panel assign-filter-card">
-        <div className="assign-step-header compact">
-          <h2>Bước 2 — Bộ lọc từ</h2>
-        </div>
-        <div className="filter-row assign-filter-row">
-          {ASSIGN_FILTER_OPTIONS.map((item) => <button key={item.value} className={activeFilter === item.value ? 'active' : ''} onClick={() => setActiveFilter(item.value)}>{item.label}</button>)}
-        </div>
-        <div className="assign-filter-toolbar">
-          <div className="search-bar panel assign-search-bar"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm từ trong kho..." /></div>
-          <select value={sort} onChange={(event) => setSort(event.target.value as AssignableSort)}>
-            {ASSIGN_SORT_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
-        </div>
-      </section>
-
-      <section className="panel assign-list-card">
-        <div className="assign-list-header">
-          <div>
-            <h3>Tìm thấy {visibleWords.length} từ có thể giao</h3>
-            <p>Các từ đã giao cho học viên này sẽ không xuất hiện lại trong danh sách.</p>
-          </div>
-          <button className="button secondary small" onClick={() => setMessage(`Đã giao ${assignedWords.length} từ cho ${selectedStudent.student_name}.`)}>Xem từ đã giao</button>
+      {selectedStudent ? <>
+        <div className="assign-reference-meta-row">
+          <p>Tìm thấy <strong>{visibleWords.length}</strong> từ có thể giao</p>
+          <button className="assign-reference-link" onClick={() => setMessage(`Đã giao ${assignedWords.length} từ cho ${selectedStudent.student_name}.`)}>Xem từ đã giao</button>
         </div>
 
-        <div className="assign-quick-actions">
-          <button className="button secondary small" onClick={() => quickSelect(5)}>Chọn 5 từ đầu</button>
-          <button className="button secondary small" onClick={() => quickSelect(10)}>Chọn 10 từ đầu</button>
-          <button className="button secondary small" onClick={() => quickSelect('all')}>Chọn tất cả đang lọc</button>
-          <button className="button secondary small" onClick={() => quickSelect('none')}><X size={14} /> Bỏ chọn</button>
+        <div className="assign-reference-bulk-actions">
+          <button className="btn secondary" onClick={() => quickSelect(5)}>Chọn 5 từ đầu</button>
+          <button className="btn secondary" onClick={() => quickSelect(10)}>Chọn 10 từ đầu</button>
+          <button className="btn secondary" onClick={() => quickSelect('all')}>Chọn tất cả</button>
+          <button className="btn ghost" onClick={() => quickSelect('none')}><X size={14} /> Bỏ chọn</button>
         </div>
 
-        {loadingWords ? <LoadingState /> : !availableWords.length ? <EmptyState title={assignedWords.length ? 'Học viên này đã được giao tất cả từ trong kho.' : 'Kho từ của bạn đang trống. Hãy nhập từ hoặc import Excel trước khi giao.'} description={assignedWords.length ? 'Hãy chọn bộ lọc khác hoặc chuyển sang học viên khác.' : 'Bạn có thể thêm từ mới ở Kho từ hoặc import Excel trước khi giao.'} /> : <div className="assign-word-table-wrap">
-          <div className="assign-word-table-head">
-            <span />
-            <span>Word</span>
-            <span>Loại từ</span>
-            <span>Độ khó</span>
-            <span>Ghi chú</span>
-            <span>Thêm vào</span>
-            <span>Định nghĩa</span>
-          </div>
-          <div className="assign-word-table-body">
-            {visibleWords.map((word) => <button key={word.id} className={`assign-word-table-row ${selectedWords.includes(word.dictionary_entry_id) ? 'selected' : ''}`} onClick={() => setSelectedWords((current) => toggleSelection(word.dictionary_entry_id, current))}>
-              <span><input type="checkbox" checked={selectedWords.includes(word.dictionary_entry_id)} onChange={() => setSelectedWords((current) => toggleSelection(word.dictionary_entry_id, current))} onClick={(event) => event.stopPropagation()} /></span>
-              <strong>{word.word}</strong>
-              <span>{word.part_of_speech ?? '—'}</span>
-              <span>{word.difficulty ?? 'Chưa đặt'}</span>
-              <span>{truncate(word.note, 42)}</span>
-              <span>{formatRelativeDate(word.created_at)}</span>
-              <span>{truncate(word.english_definition, 72)}</span>
-            </button>)}
-          </div>
+        <div className="assign-reference-search">
+          <Search size={18} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm từ trong kho..." />
+        </div>
+
+        {loadingWords ? <LoadingState /> : !availableWords.length ? <EmptyState title={assignedWords.length ? 'Học viên này đã được giao tất cả từ trong kho.' : 'Kho từ của bạn đang trống. Hãy nhập từ hoặc import Excel trước khi giao.'} description={assignedWords.length ? 'Hãy chọn bộ lọc khác hoặc chuyển sang học viên khác.' : 'Bạn có thể thêm từ mới ở Kho từ hoặc import Excel trước khi giao.'} /> : <div className="assign-reference-word-list">
+          {visibleWords.map((word) => <label key={word.id} className="assign-reference-word-row">
+            <input type="checkbox" checked={selectedWords.includes(word.dictionary_entry_id)} onChange={() => setSelectedWords((current) => toggleSelection(word.dictionary_entry_id, current))} />
+            <div className="assign-reference-word-main">
+              <div className="assign-reference-word-top">
+                <span className="assign-reference-word-text">{word.word}</span>
+                <span className="assign-reference-word-type">{word.part_of_speech ?? '—'}</span>
+                <span className={`assign-reference-badge ${word.difficulty ?? 'none'}`}>{word.difficulty ? word.difficulty[0].toUpperCase() + word.difficulty.slice(1) : 'Chưa đặt độ khó'}</span>
+              </div>
+              <p className="assign-reference-word-def">{truncate(word.english_definition, 96)}</p>
+              <p className="assign-reference-word-note">{truncate(word.note, 56)}</p>
+            </div>
+            <span className="assign-reference-word-date">{formatRelativeDate(word.created_at)}</span>
+          </label>)}
         </div>}
-      </section>
 
-      <section className="panel assign-footer-card">
-        <div className="assign-footer-summary">
-          <strong>Đã chọn {selectedWords.length} từ</strong>
-          <p>Giao từ cho {selectedStudent.student_name}</p>
+        <div className="assign-reference-box">
+          <p className="assign-reference-box-title">Đã chọn {selectedWords.length} từ · Giao từ cho {selectedStudent.student_name}</p>
+          <div className="assign-reference-fields">
+            <div className="assign-reference-field">
+              <label htmlFor="assign-due-date">Due date (tùy chọn)</label>
+              <input id="assign-due-date" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+            </div>
+            <div className="assign-reference-field wide">
+              <label htmlFor="assign-note">Ghi chú cho học viên (tùy chọn)</label>
+              <input id="assign-note" type="text" value={teacherNote} onChange={(event) => setTeacherNote(event.target.value)} placeholder="Ví dụ: ôn tập trước bài kiểm tra" />
+            </div>
+          </div>
+          <button className="submit-btn assign-reference-submit" disabled={!selectedStudentId || !selectedWords.length || assigning} onClick={() => void assignWords()}>
+            <Send size={16} /> {buildAssignButtonLabel(selectedWords.length, assigning)}
+          </button>
         </div>
-        <div className="assign-footer-fields">
-          <label>
-            <span><CalendarDays size={15} /> Due date (optional)</span>
-            <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
-          </label>
-          <label>
-            <span>Teacher note optional</span>
-            <textarea value={teacherNote} onChange={(event) => setTeacherNote(event.target.value)} placeholder="Ghi chú ngắn cho nhóm từ này..." rows={2} />
-          </label>
-        </div>
-        <button className="button primary" disabled={!selectedStudentId || !selectedWords.length || assigning} onClick={() => void assignWords()}>
-          <Send size={17} /> {assigning ? 'Đang giao từ...' : 'Giao từ'}
-        </button>
-      </section>
-    </>}
+      </> : <div className="assign-reference-empty">
+        <EmptyState title="Chọn học viên để xem các từ có thể giao." description="Sau khi chọn học viên, danh sách sẽ chỉ hiển thị các từ chưa từng giao cho học viên đó." />
+      </div>}
+    </section>
   </div>;
 }

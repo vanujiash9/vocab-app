@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import { Bell, BookText, Bot, CalendarDays, FileSpreadsheet, Home, Library, LogOut, Menu, RotateCcw, Search, Settings, Upload, Users, X } from 'lucide-react';
+import { Avatar } from './avatars/Avatar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getUnreadNotificationCount } from '../services/data';
@@ -109,7 +110,9 @@ export function Layout() {
           })}
         </nav>
         <div className="sidebar-profile">
-          <Link className="avatar" to="/profile" onClick={() => setOpen(false)}>{profile?.display_name?.slice(0, 2).toUpperCase() || 'UV'}</Link>
+          <Link className="avatar" to="/profile" onClick={() => setOpen(false)}>
+            <Avatar avatarId={profile?.avatar_id} name={profile?.display_name} size="sm" />
+          </Link>
           <Link className="sidebar-user" to="/profile" onClick={() => setOpen(false)}><strong>{profile?.display_name || 'Người dùng'}</strong><span>{profile?.email}</span></Link>
           <Link className="icon-button" to="/settings" onClick={() => setOpen(false)} aria-label="Cài đặt"><Settings size={18} /></Link>
           <button className="icon-button" onClick={logout} aria-label="Đăng xuất"><LogOut size={18} /></button>

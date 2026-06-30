@@ -171,7 +171,29 @@ export type Database = {
         };
         Update: Partial<Database['public']['Tables']['vocabulary']['Insert']>;
       };
-      profiles: { Row: Record<string, unknown>; Insert: Record<string, unknown>; Update: Record<string, unknown> };
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          display_name: string;
+          role: Database['public']['Enums']['user_role'];
+          avatar_id: string;
+          daily_goal: number;
+          reminder_enabled: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          display_name?: string;
+          role?: Database['public']['Enums']['user_role'];
+          avatar_id?: string;
+          daily_goal?: number;
+          reminder_enabled?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
+      };
       courses: { Row: Record<string, unknown>; Insert: Record<string, unknown>; Update: Record<string, unknown> };
       course_members: { Row: Record<string, unknown>; Insert: Record<string, unknown>; Update: Record<string, unknown> };
       lessons: { Row: Record<string, unknown>; Insert: Record<string, unknown>; Update: Record<string, unknown> };

@@ -7,6 +7,7 @@ export interface Profile {
   email: string;
   display_name: string;
   role: UserRole;
+  avatar_id: string;
   daily_goal: number;
   reminder_enabled: boolean;
   created_at: string;

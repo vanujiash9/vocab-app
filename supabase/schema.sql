@@ -9,6 +9,7 @@ create table public.profiles (
   email text not null,
   display_name text not null default 'Người dùng',
   role public.user_role not null default 'student',
+  avatar_id text not null default 'cat',
   daily_goal integer not null default 20 check (daily_goal between 1 and 500),
   reminder_enabled boolean not null default true,
   created_at timestamptz not null default now()

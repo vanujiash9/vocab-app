@@ -748,7 +748,7 @@ export async function saveQuizResult(userId: string, score: number, total: numbe
   return data as QuizResult;
 }
 
-export async function updateProfile(userId: string, updates: Partial<Pick<Profile, 'display_name' | 'daily_goal' | 'reminder_enabled'>>): Promise<void> {
+export async function updateProfile(userId: string, updates: Partial<Pick<Profile, 'display_name' | 'avatar_id' | 'daily_goal' | 'reminder_enabled'>>): Promise<void> {
   const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
   if (error) throw error;
 }
