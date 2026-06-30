@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import type { DictionaryEntry } from '../features/dictionary/dictionary.types';
 import { normalizeManualInput, normalizeWordKey, validateManualInput } from '../features/vocabulary-manual/vocabularyManual.utils';
 import type { VocabularyImportPreviewRow, VocabularyManualInput } from '../features/vocabulary-manual/vocabularyManual.types';
+import type { AnalyzeSelectedWordResult } from '../features/readingNotes/readingNotes.types';
 import type {
   AppNotification,
   Course,
@@ -174,6 +175,37 @@ async function upsertDictionaryEntryFromLookup(entry: DictionaryEntry): Promise<
     antonyms: entry.antonyms,
     provider: 'dictionaryapi.dev',
     raw_response: null,
+  };
+
+  const { data, error } = await supabase.from('dictionary_entries').upsert(payload, { onConflict: 'normalized_word' }).select().single();
+  if (error) throw error;
+  return requireDictionaryEntry(data as DictionaryEntryRecord);
+}
+
+export async function upsertDictionaryEntryFromAIContext(result: AnalyzeSelectedWordResult): Promise<DictionaryEntryRecord> {
+  const normalizedWord = normalizeWord(result.normalizedWord || result.word);
+  const payload = {
+    normalized_word: normalizedWord,
+    word: result.word.trim(),
+    phonetic: null,
+    audio_url: null,
+    part_of_speech: result.partOfSpeech,
+    english_definition: result.englishDefinition,
+    vietnamese_meaning: result.vietnameseMeaning ?? result.meaningInContext,
+    examples: result.examples,
+    synonyms: [],
+    antonyms: [],
+    provider: 'ai-context',
+    raw_response: {
+      meaningInContext: result.meaningInContext,
+      sentence: result.sentence,
+      explanation: result.explanation,
+      collocations: result.collocations,
+      relatedWordsFromPassage: result.relatedWordsFromPassage,
+      shouldSave: result.shouldSave,
+      saveReason: result.saveReason,
+      difficulty: result.difficulty,
+    },
   };
 
   const { data, error } = await supabase.from('dictionary_entries').upsert(payload, { onConflict: 'normalized_word' }).select().single();
@@ -384,6 +416,42 @@ export async function saveManualTeacherVocabulary(teacherId: string, input: Voca
     dictionary_entry_id: entry.id,
     note: normalized.note ?? null,
     difficulty: normalized.difficulty ?? null,
+  });
+  if (error) throw error;
+  return { status: 'saved' };
+}
+
+export async function saveAIContextStudentVocabulary(userId: string, result: AnalyzeSelectedWordResult): Promise<{ status: 'saved' | 'duplicate' }> {
+  const entry = await upsertDictionaryEntryFromAIContext(result);
+  const existing = await getUserVocabularyByEntry(userId, entry.id);
+  if (existing) return { status: 'duplicate' };
+
+  const { error } = await supabase.from('user_vocabulary').insert({
+    user_id: userId,
+    dictionary_entry_id: entry.id,
+    status: 'new' as VocabularyStatus,
+    personal_note: result.saveReason,
+  });
+  if (error) throw error;
+  return { status: 'saved' };
+}
+
+export async function saveAIContextTeacherVocabulary(teacherId: string, result: AnalyzeSelectedWordResult): Promise<{ status: 'saved' | 'duplicate' }> {
+  const entry = await upsertDictionaryEntryFromAIContext(result);
+  const { data: existing, error: existingError } = await supabase
+    .from('teacher_vocabulary')
+    .select('id')
+    .eq('teacher_id', teacherId)
+    .eq('dictionary_entry_id', entry.id)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) return { status: 'duplicate' };
+
+  const { error } = await supabase.from('teacher_vocabulary').insert({
+    teacher_id: teacherId,
+    dictionary_entry_id: entry.id,
+    difficulty: result.difficulty,
+    note: 'From reading passage',
   });
   if (error) throw error;
   return { status: 'saved' };

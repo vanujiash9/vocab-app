@@ -85,6 +85,4 @@ docs/
 *.local
 .vercel/
 .netlify/
-.vercel
-.env*
 supabase-secrets.env

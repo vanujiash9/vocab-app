@@ -14,13 +14,28 @@ const sourceOptions: Array<{ value: StudentAIWordSource; label: string }> = [
   { value: 'learning', label: 'Từ đang học' },
   { value: 'assigned', label: 'Từ được giao' },
 ];
+const goalOptions = [
+  { value: 'review', label: 'Ôn tập' },
+  { value: 'new', label: 'Học từ mới' },
+  { value: 'quick', label: 'Kiểm tra nhanh' },
+] as const;
+
+type StudyGoal = typeof goalOptions[number]['value'];
 
 function isEmptyStudyResult(result: StudentAIStudyResult | null): boolean {
-  return !!result && result.sections.every((section) => section.words.length === 0);
+  return !!result
+    && result.sections.length > 0
+    && result.sections.every((section) => section.words.length === 0);
 }
 
-function getActionLabel(mode: StudentAIRecommendedMode): string {
-  return `Gợi ý ưu tiên: ${getStudentModeLabel(mode)}`;
+function getSourceDescription(source: StudentAIWordSource): string {
+  return source === 'difficult'
+    ? 'Tập trung vào các từ bạn hay quên để ôn lại có trọng tâm hơn.'
+    : source === 'learning'
+      ? 'Ưu tiên các từ đang học để giữ nhịp ghi nhớ mỗi ngày.'
+      : source === 'assigned'
+        ? 'Đi thẳng vào các từ được giao để hoàn thành việc học nhanh hơn.'
+        : 'Trộn từ trong thư viện và bài được giao để tạo một phiên học cân bằng.';
 }
 
 function getSourceLabel(source: StudentAIWordSource): string {
@@ -30,43 +45,42 @@ function getSourceLabel(source: StudentAIWordSource): string {
       ? 'Từ đang học'
       : source === 'assigned'
         ? 'Từ được giao'
-        : 'Tất cả từ';
+        : 'Tất cả';
 }
 
-function getPsychologyHint(source: StudentAIWordSource): string {
-  return source === 'difficult'
-    ? 'Ưu tiên active recall với từ khó trước, rồi mới chuyển sang nhận diện đáp án.'
-    : source === 'learning'
-      ? 'Ôn theo cụm nhỏ để chuyển trí nhớ ngắn hạn thành trí nhớ dài hạn.'
-      : source === 'assigned'
-        ? 'Đi theo nhịp ngắn để học kịp các từ được giao và tránh quên nhanh.'
-        : 'Bắt đầu từ cụm quan trọng nhất trước, rồi chuyển dần sang các từ ôn nhẹ hơn.';
+function getActivityLabel(mode: StudentAIRecommendedMode): string {
+  return mode === 'flashcard' ? 'Flashcard' : mode === 'quiz' ? 'Quiz' : 'Review';
 }
 
-function getNextActionLabel(mode: StudentAIRecommendedMode): string {
+function getGoalHint(goal: StudyGoal): string {
+  return goal === 'new'
+    ? 'Phù hợp khi bạn muốn làm quen nhanh với một nhóm từ mới.'
+    : goal === 'quick'
+      ? 'Phù hợp khi bạn muốn kiểm tra lại trí nhớ trong một lượt ngắn.'
+      : 'Phù hợp khi bạn muốn ôn có thứ tự và dễ bắt đầu ngay.';
+}
+
+function getPlanBadge(mode: StudentAIRecommendedMode): string {
   return mode === 'flashcard'
-    ? 'Bắt đầu bằng flashcard để nhớ chủ động từng từ.'
+    ? 'Đề xuất: Ôn tập bằng Flashcard'
     : mode === 'quiz'
-      ? 'Bắt đầu bằng quiz để kiểm tra nhận diện nhanh.'
-      : 'Bắt đầu bằng lượt ôn tập ngắn để kích hoạt lại trí nhớ.';
+      ? 'Đề xuất: Kiểm tra nhanh bằng Quiz'
+      : 'Đề xuất: Ôn tập bằng Flashcard';
 }
 
-function getSectionReasonLabel(activity: StudentAIRecommendedMode): string {
-  return activity === 'review'
-    ? 'Nhóm ôn kích hoạt trí nhớ'
-    : activity === 'quiz'
-      ? 'Nhóm luyện nhận diện nhanh'
-      : 'Nhóm học mới bằng flashcard';
+function getPrimaryAction(mode: StudentAIRecommendedMode): 'flashcard' | 'quiz' {
+  return mode === 'quiz' ? 'quiz' : 'flashcard';
 }
 
-function getSectionPriority(index: number): string {
-  return index === 0 ? 'Ưu tiên cao nhất' : index === 1 ? 'Ôn tiếp theo' : 'Cụm bổ sung';
+function getSectionDisplayTitle(index: number): string {
+  return index === 0 ? 'Bước 1 · Ôn từ cần nhớ' : index === 1 ? 'Bước 2 · Kiểm tra lại' : `Bước ${index + 1} · Củng cố thêm`;
 }
 
 export function StudentAIStudyCard() {
   const navigate = useNavigate();
   const [minutes, setMinutes] = useState<number>(15);
   const [source, setSource] = useState<StudentAIWordSource>('all');
+  const [goal, setGoal] = useState<StudyGoal>('review');
   const [result, setResult] = useState<StudentAIStudyResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -87,61 +101,85 @@ export function StudentAIStudyCard() {
       setLoading(false);
     }
   };
-  return <section className="dashboard-grid ai-assistant-grid">
+
+  const primaryAction = result ? getPrimaryAction(result.recommendedMode) : 'flashcard';
+
+  return <section className="ai-assistant-grid">
     <article className="panel ai-control-card">
-      <div className="panel-heading">
-        <div>
-          <h3>AI gợi ý phiên học hôm nay</h3>
-          <p>Chọn thời lượng và nguồn từ để tạo phiên học ngắn, có kiểm soát.</p>
-        </div>
+      <div className="ai-control-header">
+        <h3>Bạn muốn học thế nào hôm nay?</h3>
+        <p>Chọn thời lượng và nhóm từ, AI sẽ tạo một phiên học ngắn từ dữ liệu thật của bạn.</p>
       </div>
-      <div className="detail-block ai-control-block">
+
+      <div className="ai-control-group">
         <h4>Thời lượng</h4>
         <div className="filter-row ai-filter-row">
           {minuteOptions.map((value) => <button key={value} className={minutes === value ? 'active' : ''} onClick={() => setMinutes(value)}>{value} phút</button>)}
         </div>
       </div>
-      <div className="detail-block ai-control-block">
+
+      <div className="ai-control-group">
         <h4>Nguồn từ</h4>
         <div className="filter-row ai-filter-row">
           {sourceOptions.map((option) => <button key={option.value} className={source === option.value ? 'active' : ''} onClick={() => setSource(option.value)}>{option.label}</button>)}
         </div>
       </div>
+
+      <div className="ai-control-group">
+        <h4>Mục tiêu</h4>
+        <div className="filter-row ai-filter-row">
+          {goalOptions.map((option) => <button key={option.value} className={goal === option.value ? 'active' : ''} onClick={() => setGoal(option.value)}>{option.label}</button>)}
+        </div>
+      </div>
+
+      <div className="ai-control-note-card">
+        <strong>{getSourceLabel(source)} · {minutes} phút</strong>
+        <p>{getSourceDescription(source)} {getGoalHint(goal)}</p>
+      </div>
+
       {error && <div className="form-message standalone">{error}</div>}
-      <button className="button primary" disabled={loading} onClick={() => void generate()}>
-        <Sparkles size={17} /> {loading ? 'Đang lấy gợi ý từ AI...' : 'Tạo gợi ý học'}
-      </button>
+
+      <div className="ai-control-footer">
+        <button className="button primary" disabled={loading} onClick={() => void generate()}>
+          <Sparkles size={17} /> {loading ? 'Đang tạo kế hoạch...' : '✨ Tạo kế hoạch học'}
+        </button>
+        <p className="ai-control-note">AI chỉ dùng từ vựng có trong thư viện và bài được giao của bạn.</p>
+      </div>
     </article>
 
-    <div>
-      {!result && !loading && !error && <EmptyState title="Chưa chạy gợi ý AI" description="Chọn thời lượng, chọn nguồn từ rồi bấm Tạo gợi ý học để bắt đầu." />}
-      {loading && <article className="state-card"><div className="loader" /><strong>AI đang tạo gợi ý học</strong><p>Hệ thống đang lấy dữ liệu từ Supabase và sắp xếp phiên học cho bạn...</p></article>}
+    <div className="ai-result-column">
+      {!result && !loading && !error && <div className="ai-empty-wrap"><EmptyState title="Chưa có kế hoạch học" description="Chọn thông tin bên trái rồi bấm Tạo kế hoạch học để AI sắp xếp phiên học cho bạn." /></div>}
+      {loading && <article className="state-card"><div className="loader" /><strong>AI đang tạo kế hoạch học</strong><p>Hệ thống đang lấy dữ liệu từ Supabase và sắp xếp phiên học cho bạn...</p></article>}
       {isEmptyStudyResult(result) && !loading && <EmptyState title="Chưa đủ từ để gợi ý" description="Bạn chưa có đủ từ để AI gợi ý phiên học." />}
       {result && !isEmptyStudyResult(result) && <AIResultCard
         title={result.title}
         summary={result.summary}
-        footer={<>
-          <span className="role-pill">{getActionLabel(result.recommendedMode)}</span>
-          <div className="status-actions">
-            <button className="button secondary" onClick={() => navigate('/flashcards')}><BookOpen size={17} /> Học Flashcard</button>
-            <button className="button primary" onClick={() => navigate('/quiz')}><ClipboardCheck size={17} /> Làm Quiz</button>
+        footer={<div className="ai-result-actions">
+          <div className="ai-result-actions-title">
+            <strong>Bắt đầu học</strong>
+            <span>{getPlanBadge(result.recommendedMode)}</span>
           </div>
-        </>}
+          <div className="status-actions ai-result-action-buttons">
+            <button className={primaryAction === 'flashcard' ? 'button primary' : 'button secondary'} onClick={() => navigate('/flashcards')}><BookOpen size={17} /> Học Flashcard</button>
+            <button className={primaryAction === 'quiz' ? 'button primary' : 'button secondary'} onClick={() => navigate('/quiz')}><ClipboardCheck size={17} /> Làm Quiz</button>
+          </div>
+        </div>}
       >
         <div className="ai-section-stack">
-          {result.sections.map((section) => <section key={section.title} className="ai-section-card">
+          {result.sections.map((section, index) => <section key={`${section.title}:${index}`} className="ai-section-card">
+            <div className="ai-step-badge">Bước {index + 1}</div>
             <div className="detail-title ai-section-title">
               <div>
-                <h4>{section.title}</h4>
-                <p>{getStudentModeLabel(section.activity)}</p>
+                <h4>{getSectionDisplayTitle(index)}</h4>
+                <p>{getActivityLabel(section.activity)}</p>
               </div>
             </div>
             <div className="ai-pill-list">
-              {section.words.map((word) => <span key={`${section.title}:${word}`} className="role-pill ai-word-pill">{word}</span>)}
+              {section.words.map((word) => <span key={`${section.title}:${word}`} className="ai-word-pill">{word}</span>)}
             </div>
           </section>)}
         </div>
-        <div className="detail-block">
+        <div className="ai-tip-card">
           <h4>Mẹo học nhanh</h4>
           <p>{result.tip}</p>
         </div>

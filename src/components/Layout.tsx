@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
-import { Bell, BookOpen, Bot, CalendarDays, ClipboardCheck, FileSpreadsheet, Home, Library, LogOut, Menu, Search, Send, Settings, Upload, Users, X } from 'lucide-react';
+import { Bell, BookText, Bot, CalendarDays, FileSpreadsheet, Home, Library, LogOut, Menu, RotateCcw, Search, Send, Settings, Upload, Users, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getUnreadNotificationCount } from '../services/data';
@@ -8,10 +8,10 @@ import { getUnreadNotificationCount } from '../services/data';
 const studentNav = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
   { to: '/lookup', label: 'Tra cứu từ', icon: Search },
+  { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookText },
   { to: '/library', label: 'Thư viện từ', icon: Library },
   { to: '/assigned-words', label: 'Từ được giao', icon: Send },
-  { to: '/flashcards', label: 'Flashcard', icon: BookOpen },
-  { to: '/quiz', label: 'Quiz', icon: ClipboardCheck },
+  { to: '/review', label: 'Ôn tập', icon: RotateCcw },
   { to: '/ai-assistant', label: 'Trợ lý AI', icon: Bot },
   { to: '/deadlines', label: 'Deadline', icon: CalendarDays },
   { to: '/notifications', label: 'Thông báo', icon: Bell },
@@ -20,6 +20,7 @@ const studentNav = [
 const teacherNav = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
   { to: '/lookup', label: 'Tra cứu từ', icon: Search },
+  { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookText },
   { to: '/library', label: 'Kho từ vựng', icon: Library },
   { to: '/assign-words', label: 'Giao từ', icon: Upload },
   { to: '/ai-assistant', label: 'Trợ lý AI', icon: Bot },
@@ -108,11 +109,6 @@ export function Layout() {
             </NavLink>;
           })}
         </nav>
-        <div className="role-card">
-          <span className="role-pill">{profile?.role === 'teacher' ? 'Teacher' : 'Student'}</span>
-          <strong>{profile?.role === 'teacher' ? 'Không gian giáo viên' : 'Không gian học từ vựng'}</strong>
-          <p>{profile?.role === 'teacher' ? 'Quản lý kho từ, giao từ và theo dõi học viên.' : 'Tra cứu, lưu từ, ôn flashcard và làm quiz mỗi ngày.'}</p>
-        </div>
         <div className="sidebar-profile">
           <Link className="avatar" to="/profile" onClick={() => setOpen(false)}>{profile?.display_name?.slice(0, 2).toUpperCase() || 'UV'}</Link>
           <Link className="sidebar-user" to="/profile" onClick={() => setOpen(false)}><strong>{profile?.display_name || 'Người dùng'}</strong><span>{profile?.email}</span></Link>

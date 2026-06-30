@@ -13,7 +13,7 @@ export function AIAssistantPage() {
       <div>
         <span>AI assistant</span>
         <h1>Trợ lý AI</h1>
-        <p>Gợi ý học tập và sắp xếp bộ từ bằng dữ liệu thật từ Supabase, không tự thay đổi dữ liệu của bạn.</p>
+        <p>Tạo kế hoạch học và sắp xếp bộ từ từ dữ liệu thật trong thư viện của bạn.</p>
       </div>
     </div>
     {profile.role === 'teacher' ? <TeacherAIWordSetCard /> : <StudentAIStudyCard />}

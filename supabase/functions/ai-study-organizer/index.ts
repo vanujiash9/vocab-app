@@ -339,19 +339,40 @@ function buildFallbackStudentStudyResult(words: StudentAIWordInput[], minutes: n
     words: chunk.map((item) => item.word),
     activity: index === 0 ? 'review' : index === 1 ? 'quiz' : 'flashcard',
   }));
-  const focusLabel = source === 'difficult'
+  const shortlistedCount = words.length;
+  const sourceLabel = source === 'difficult'
     ? 'từ khó nhớ'
     : source === 'learning'
       ? 'từ đang học'
       : source === 'assigned'
         ? 'từ được giao'
-        : 'những từ cần ưu tiên nhất';
+        : 'các từ ưu tiên';
+  const title = source === 'assigned'
+    ? `Lộ trình ${minutes} phút cho từ được giao`
+    : source === 'difficult'
+      ? `Lộ trình ${minutes} phút cho từ khó nhớ`
+      : source === 'learning'
+        ? `Lộ trình ${minutes} phút cho từ đang học`
+        : `Lộ trình ${minutes} phút cho các từ ưu tiên`;
+  const summary = source === 'all'
+    ? `AI đã chọn ${shortlistedCount} từ ưu tiên từ thư viện và bài giao để tạo phiên học ${minutes} phút cho bạn.`
+    : `AI đã xếp ${shortlistedCount} ${sourceLabel} thành phiên học ${minutes} phút để bạn ôn theo mức ưu tiên.`;
+  const baseTip = minutes === 10
+    ? 'Đi nhanh một lượt active recall với cụm đầu tiên trước rồi mới kiểm tra lại đáp án.'
+    : minutes === 15
+      ? 'Ôn chắc cụm đầu trước, rồi chuyển sang cụm sau để tự kiểm tra mức nhớ.'
+      : 'Chia nhịp học theo từng cụm và chừa lượt cuối để tự kiểm tra lại toàn bộ từ.';
+  const sourceTip = source === 'difficult'
+    ? 'Với từ khó, hãy cố nhớ nghĩa lâu hơn một chút trước khi lật đáp án.'
+    : source === 'assigned'
+      ? 'Ưu tiên hoàn thành cụm đầu trước để xử lý những từ được giao quan trọng nhất.'
+      : 'So sánh các từ gần nghĩa trong từng cụm nhỏ để nhớ chắc hơn.';
 
   return {
-    title: 'Kế hoạch học cá nhân hoá',
-    summary: `AI đã sắp xếp phiên học ngắn dựa trên ${focusLabel}, độ khó và mức độ gần quên của bạn.`,
+    title,
+    summary,
     sections,
-    tip: 'Bắt đầu với cụm đầu tiên, cố nhớ nghĩa trước khi lật đáp án và chuyển sang quiz khi đã thấy quen từ.',
+    tip: `${baseTip} ${sourceTip}`,
     recommendedMode: sections[0]?.activity ?? 'review',
   };
 }
@@ -546,6 +567,14 @@ Deno.serve(async (req: Request) => {
         .slice(0, 15);
 
       if (!shortlisted.length) {
+        console.error('ai-study-organizer student diagnostics', {
+          branch: 'empty-shortlist',
+          source: body.source,
+          minutes: body.minutes,
+          libraryCount: libraryItems.length,
+          assignmentCount: assignmentItems.length,
+          shortlistedCount: shortlisted.length,
+        });
         return json({
           result: normalizeStudentStudyResult({
             title: 'Chưa có đủ dữ liệu học',
@@ -562,7 +591,21 @@ Deno.serve(async (req: Request) => {
         buildStudentPrompt(shortlisted, body.minutes),
       );
       const result = normalizeStudentStudyResult(parseJson<unknown>(content));
-      return json({ result });
+      if (!result.sections.length) {
+        console.error('ai-study-organizer student diagnostics', {
+          branch: 'empty-sections-after-normalize',
+          source: body.source,
+          minutes: body.minutes,
+          libraryCount: libraryItems.length,
+          assignmentCount: assignmentItems.length,
+          shortlistedCount: shortlisted.length,
+        });
+      }
+      return json({
+        result: result.sections.length > 0
+          ? result
+          : buildFallbackStudentStudyResult(shortlisted, body.minutes, body.source),
+      });
     }
 
     if (profile.role !== 'teacher') return json({ error: 'Student không thể dùng tác vụ Teacher AI.' }, 403);

@@ -24,7 +24,7 @@ export interface StudentAIStudyResult {
   rationale?: string;
   nextStep?: string;
 }
-'} to=functions.Edit code /Subthresholdanalysis to=functions.Edit  өтjson code  ok{
+
 export type TeacherAIGoal =
   | 'review'
   | 'ielts_writing'

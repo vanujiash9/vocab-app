@@ -7,17 +7,16 @@ import { AssignWordsPage } from './pages/AssignWordsPage';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DeadlinesPage } from './pages/DeadlinesPage';
-import { FlashcardsPage } from './pages/FlashcardsPage';
 import { AIAssistantPage } from './features/ai/AIAssistantPage';
 import { DictionarySearchPage } from './features/dictionary/DictionarySearchPage';
 import { ImportExcelPage } from './pages/ImportExcelPage';
 import { LibraryPage } from './pages/LibraryPage';
 import { NotificationsPage } from './pages/NotificationsPage';
-import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { QuizPage } from './pages/QuizPage';
+import { ReviewPage } from './pages/ReviewPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { StudentsPage } from './pages/StudentsPage';
+import { ReadingNotesPage } from './features/readingNotes/ReadingNotesPage';
 
 function TeacherOnly({ children }: { children: React.ReactNode }) {
   const { profile } = useAuth();
@@ -31,9 +30,11 @@ export default function App() {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/lookup" element={<DictionarySearchPage />} />
       <Route path="/library" element={<LibraryPage />} />
+      <Route path="/reading-notes" element={<ReadingNotesPage />} />
       <Route path="/assigned-words" element={<AssignedWordsPage />} />
-      <Route path="/flashcards" element={<FlashcardsPage />} />
-      <Route path="/quiz" element={<QuizPage />} />
+      <Route path="/review" element={<ReviewPage />} />
+      <Route path="/flashcards" element={<Navigate to="/review" replace />} />
+      <Route path="/quiz" element={<Navigate to="/review" replace />} />
       <Route path="/ai-assistant" element={<AIAssistantPage />} />
       <Route path="/deadlines" element={<DeadlinesPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
