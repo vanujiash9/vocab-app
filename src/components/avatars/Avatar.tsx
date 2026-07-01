@@ -20,11 +20,14 @@ export function Avatar({ avatarId, name, size = 'sm', className = '' }: AvatarPr
   const avatar = getAvatarDefinition(avatarId);
   const classes = ['app-avatar', `app-avatar-${size}`, className].filter(Boolean).join(' ');
   const initials = buildInitials(name);
+  const shouldShowFallback = !avatarId;
 
   return (
     <div className={classes} aria-label={`Avatar của ${name ?? 'người dùng'}`} title={avatar.name}>
       <div className="app-avatar-art">{avatar.renderFace(avatar.palette)}</div>
-      <span className="app-avatar-fallback">{initials}</span>
+      {shouldShowFallback ? <span className="app-avatar-fallback">{initials}</span> : null}
     </div>
   );
 }
+
+// ponytail: initials render only when no avatar is selected, so the outer avatar stays visually clean.

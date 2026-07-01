@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import './LibraryPage.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { NavigateOptions } from 'react-router-dom';
 import { Plus, Search, Upload, Volume2 } from 'lucide-react';
