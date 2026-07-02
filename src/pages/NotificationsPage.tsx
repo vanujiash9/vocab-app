@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Bell, CheckCircle2 } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 import { useAuth } from '../contexts/AuthContext';
-import { listNotifications, markNotificationRead } from '../services/data';
+import { listNotifications, markNotificationRead } from '../services/notifications';
 import type { AppNotification } from '../types';
 
 function formatNotificationTime(value: string): string {
@@ -46,6 +46,8 @@ export function NotificationsPage() {
 
   const markRead = async (id: string) => {
     await markNotificationRead(id);
+    setItems((current) => current.map((item) => item.id === id ? { ...item, read_at: new Date().toISOString() } : item));
+    window.dispatchEvent(new Event('notifications:changed'));
     await load();
   };
 
@@ -57,7 +59,7 @@ export function NotificationsPage() {
   return <div className="page-wrap notifications-page-wrap">
     <div className="page-heading notifications-page-heading">
       <div>
-        <span>{isTeacher ? 'Teacher notifications' : 'Notifications'}</span>
+        <span>Study updates</span>
         <h1>Thông báo</h1>
         <p>{pageDescription}</p>
       </div>
@@ -66,8 +68,8 @@ export function NotificationsPage() {
     {items.length ? <section className="panel notifications-panel">
       <div className="panel-heading notifications-panel-heading">
         <div>
-          <h3>Hộp thư thông báo</h3>
-          <p>{unreadCount ? `${unreadCount} thông báo chưa đọc` : 'Tất cả thông báo đã được xem'}</p>
+          <h3>{unreadCount ? `${unreadCount} thông báo chưa đọc` : 'Danh sách thông báo'}</h3>
+          <p>{isTeacher ? 'Các cập nhật mới nhất về học viên, giao từ và đầu việc giảng dạy của bạn.' : 'Các cập nhật mới nhất về từ được giao và nhắc nhở học tập của bạn.'}</p>
         </div>
       </div>
 

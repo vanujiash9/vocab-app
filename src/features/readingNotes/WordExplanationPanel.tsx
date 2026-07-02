@@ -52,39 +52,39 @@ export function WordExplanationPanel({ role, selectedWord, loading, error, resul
       </div>
     </div>
     <div className="detail-block">
-      <h4>Nghĩa trong ngữ cảnh</h4>
+      <h3>Nghĩa trong ngữ cảnh</h3>
       <p>{result.meaningInContext}</p>
     </div>
     {result.vietnameseMeaning && <div className="detail-block">
-      <h4>Nghĩa tiếng Việt</h4>
+      <h3>Nghĩa tiếng Việt</h3>
       <p>{result.vietnameseMeaning}</p>
     </div>}
     <div className="detail-block">
-      <h4>Định nghĩa tiếng Anh</h4>
+      <h3>Định nghĩa tiếng Anh</h3>
       <p>{result.englishDefinition}</p>
     </div>
     <div className="detail-block">
-      <h4>Câu chứa từ</h4>
+      <h3>Câu chứa từ</h3>
       <p>{result.sentence}</p>
     </div>
     <div className="detail-block">
-      <h4>Giải thích</h4>
+      <h3>Giải thích</h3>
       <p>{result.explanation}</p>
     </div>
     <div className="detail-block">
-      <h4>Cụm hay dùng</h4>
+      <h3>Cụm hay dùng</h3>
       {result.collocations.length ? <ul>{result.collocations.map((item) => <li key={item}>{item}</li>)}</ul> : <p>Chưa có gợi ý thêm.</p>}
     </div>
     <div className="detail-block">
-      <h4>Ví dụ</h4>
+      <h3>Ví dụ</h3>
       {result.examples.length ? <ul>{result.examples.map((item) => <li key={item}>{item}</li>)}</ul> : <p>Chưa có ví dụ.</p>}
     </div>
     <div className="detail-block">
-      <h4>Từ liên quan trong đoạn</h4>
+      <h3>Từ liên quan trong đoạn</h3>
       {result.relatedWordsFromPassage.length ? <ul>{result.relatedWordsFromPassage.map((item) => <li key={`${item.word}:${item.reason}`}><strong>{item.word}</strong>: {item.reason}</li>)}</ul> : <p>Không có từ liên quan rõ ràng trong đoạn.</p>}
     </div>
     <div className="detail-block">
-      <h4>Có nên lưu?</h4>
+      <h3>Có nên lưu?</h3>
       <p>{result.shouldSave ? result.saveReason : `Không bắt buộc lưu. ${result.saveReason}`}</p>
       <p>Độ khó: <strong>{result.difficulty}</strong></p>
       {saveMessage && <div className="form-message standalone">{saveMessage}</div>}

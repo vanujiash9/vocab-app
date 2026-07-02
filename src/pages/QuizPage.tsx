@@ -261,7 +261,7 @@ export function QuizPage() {
       <section className="panel quiz-panel study-summary-panel">
         <strong>Điểm: {correctCount}/{questions.length}</strong>
         <p>Bạn trả lời đúng {correctCount} trên tổng {questions.length} câu.</p>
-        {wrongAnswers.length ? <div className="detail-block study-wrong-list"><h4>Câu sai</h4><ul>{wrongAnswers.map((answer) => <li key={`${answer.question}-${answer.selectedAnswer}`}><strong>{answer.question}</strong><span>Bạn chọn: {answer.selectedAnswer || 'Chưa chọn'}</span><span>Đáp án đúng: {answer.correctAnswer}</span></li>)}</ul></div> : <div className="quiz-feedback">Bạn đã trả lời đúng tất cả các câu.</div>}
+        {wrongAnswers.length ? <div className="detail-block study-wrong-list"><h3>Câu sai</h3><ul>{wrongAnswers.map((answer) => <li key={`${answer.question}-${answer.selectedAnswer}`}><strong>{answer.question}</strong><span>Bạn chọn: {answer.selectedAnswer || 'Chưa chọn'}</span><span>Đáp án đúng: {answer.correctAnswer}</span></li>)}</ul></div> : <div className="quiz-feedback">Bạn đã trả lời đúng tất cả các câu.</div>}
         <div className="status-actions">
           <button className="button primary" onClick={restart}>Làm lại</button>
           <Link className="button secondary" to="/library">Về thư viện</Link>

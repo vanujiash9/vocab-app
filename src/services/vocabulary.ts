@@ -1,4 +1,11 @@
-import { deleteStudentVocabulary, listAssignmentsForStudent, listStudentVocabulary, updateAssignmentStatus, updateStudentVocabularyStatus } from './data';
+import {
+  deleteStudentVocabulary,
+  listAssignmentsForStudent,
+  listStudentVocabulary,
+  saveManualStudentVocabulary,
+  updateAssignmentStatus,
+  updateStudentVocabularyStatus,
+} from './data';
 import type { StudentVocabularyItem, VocabularyAssignment, VocabularyStatus } from '../types';
 
 const ASSIGNED_PREVIEW_LIMIT = 5;
@@ -6,19 +13,10 @@ const DUE_SOON_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
 export type UnifiedVocabularyFilter = 'all' | 'assigned' | 'learning' | 'difficult' | 'known';
 
-export interface VocabularyOverviewItem {
-  id: string;
-  word: string;
-  status: VocabularyStatus;
-  teacherNote: string | null;
-  assignedAt: string;
-  dueAt: string | null;
-}
-
 export interface StudentVocabularyOverview {
   assignedCount: number;
   dueSoonCount: number;
-  latestAssignedWords: VocabularyOverviewItem[];
+  latestAssignedWords: UnifiedStudentVocabularyItem[];
   hasMoreAssignedWords: boolean;
 }
 
@@ -47,19 +45,7 @@ export interface UnifiedStudentVocabularyItem {
 }
 
 function getDueAt(item: VocabularyAssignment): string | null {
-  const dueAt = (item as VocabularyAssignment & { due_at?: unknown }).due_at;
-  return typeof dueAt === 'string' && dueAt.trim() ? dueAt : null;
-}
-
-function mapOverviewItem(item: VocabularyAssignment): VocabularyOverviewItem {
-  return {
-    id: item.id,
-    word: item.word,
-    status: item.status,
-    teacherNote: item.note,
-    assignedAt: item.assigned_at,
-    dueAt: getDueAt(item),
-  };
+  return typeof item.due_at === 'string' && item.due_at.trim() ? item.due_at : null;
 }
 
 function buildLibraryItem(item: StudentVocabularyItem): UnifiedStudentVocabularyItem {
@@ -125,9 +111,11 @@ function mergeAssignedWithLibrary(assignment: VocabularyAssignment, library: Stu
   };
 }
 
+export { saveManualStudentVocabulary };
+
 export async function getStudentVocabularyOverview(userId: string): Promise<StudentVocabularyOverview> {
   const assignments = await listAssignmentsForStudent(userId);
-  const latestAssignedWords = assignments.slice(0, ASSIGNED_PREVIEW_LIMIT).map(mapOverviewItem);
+  const latestAssignedWords = assignments.slice(0, ASSIGNED_PREVIEW_LIMIT).map(buildAssignedItem);
   const dueSoonCount = assignments.filter((item) => {
     const dueAt = getDueAt(item);
     if (!dueAt) return false;

@@ -136,7 +136,6 @@ export function ReadingNotesPage() {
       <div>
         <span>Reading notes</span>
         <h1>Đọc & Ghi chú từ</h1>
-        <p>Dán đoạn văn tiếng Anh, chọn từ bạn chưa biết và lưu lại để học sau.</p>
       </div>
     </div>
     <section className="reading-notes-layout">

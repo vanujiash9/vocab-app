@@ -1,14 +1,19 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Avatar } from '../components/avatars/Avatar';
 import { AVATAR_DEFINITIONS, type AvatarId } from '../components/avatars/avatarData';
 import { useAuth } from '../contexts/AuthContext';
-import { updateProfile } from '../services/data';
+import { updateProfile } from '../services/profile';
 
 export function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth();
   const [name, setName] = useState(profile?.display_name ?? '');
   const [selectedAvatarId, setSelectedAvatarId] = useState<AvatarId>((profile?.avatar_id as AvatarId | undefined) ?? 'cat');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    setName(profile?.display_name ?? '');
+    setSelectedAvatarId((profile?.avatar_id as AvatarId | undefined) ?? 'cat');
+  }, [profile?.avatar_id, profile?.display_name]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();

@@ -1,18 +1,113 @@
-import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
-import { CalendarClock, CheckCircle2, FileSpreadsheet, LibraryBig, TriangleAlert, Upload, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CalendarClock, CheckCircle2, LibraryBig, TriangleAlert, Upload, Users } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
-import { getDashboardSummary, listDeadlines, listTeacherStudents, listTeacherVocabulary } from '../services/data';
-import type { DashboardSummary, Deadline, TeacherStudent, TeacherVocabularyItem } from '../types';
+import { listDeadlines } from '../services/deadlines';
+import { getDashboardSummary, listTeacherAssignmentSummaries, listTeacherStudents, listTeacherVocabulary } from '../services/dashboard';
+import type { DashboardSummary, Deadline, MascotVariant, TeacherAssignmentSummary, TeacherStudent } from '../types';
 import { ErrorState, LoadingState } from '../components/PageState';
-import { StudyMascot } from '../components/StudyMascot';
+import { StudyMascot } from '../components/study-mascot/StudyMascot';
+
+interface TeacherChartDatum {
+  key: string;
+  label: string;
+  value: number;
+  detail: string;
+  color: string;
+}
+
+function TeacherChart({ items }: { items: TeacherChartDatum[] }) {
+  const [activeKey, setActiveKey] = useState(items[0]?.key ?? '');
+  const activeItem = items.find((item) => item.key === activeKey) ?? items[0] ?? null;
+
+  return <div className="teacher-chart-shell">
+    <div className="teacher-chart-wrap">
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={items} barCategoryGap={18}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e6edf6" />
+          <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#607590', fontSize: 12, fontWeight: 600 }} />
+          <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: '#8b93a1', fontSize: 12 }} />
+          <Tooltip cursor={{ fill: 'rgba(24,95,165,0.06)' }} formatter={(value) => [value ?? 0, 'Giá trị']} />
+          <Bar dataKey="value" radius={[10, 10, 0, 0]} onClick={(entry) => setActiveKey(String(entry?.key ?? ''))}>
+            {items.map((item) => <Cell key={item.key} fill={item.key === activeKey ? item.color : `${item.color}99`} cursor="pointer" />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+    {activeItem ? <div className="teacher-chart-detail"><strong>{activeItem.label}</strong><p>{activeItem.detail}</p></div> : null}
+  </div>;
+}
+
+function getStudentDate(student: TeacherStudent): string {
+  return new Date(student.created_at).toLocaleDateString('vi-VN');
+}
+
+function getAssignmentDate(value: string): string {
+  return new Date(value).toLocaleDateString('vi-VN');
+}
+
+function getAssignmentStatusLabel(status: TeacherAssignmentSummary['status']): string {
+  return status === 'known' ? 'Hoàn thành' : status === 'learning' ? 'Đang học' : status === 'difficult' ? 'Cần hỗ trợ' : 'Mới giao';
+}
+
+function byNewest<T extends { created_at?: string }>(items: T[]): T[] {
+  return [...items].sort((left, right) => new Date(right.created_at ?? 0).getTime() - new Date(left.created_at ?? 0).getTime());
+}
+
+function TeacherAssignmentTable({ assignments }: { assignments: TeacherAssignmentSummary[] }) {
+  return <div className="table-wrap teacher-dashboard-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Ngày giao</th>
+          <th>Học viên</th>
+          <th>Số từ</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        {assignments.map((item) => <tr key={`${item.student_id}:${item.assigned_at}`}>
+          <td>{getAssignmentDate(item.assigned_at)}</td>
+          <td>{item.student_name}</td>
+          <td>{item.word_count}</td>
+          <td>{getAssignmentStatusLabel(item.status)}</td>
+        </tr>)}
+      </tbody>
+    </table>
+  </div>;
+}
+
+function Progress({ label, value }: { label: string; value: number }) {
+  return <div className="progress-row"><div><span>{label}</span><b>{Math.round(value)}%</b></div><div className="progress-track"><i style={{ width: `${Math.min(100, value)}%` }} /></div></div>;
+}
+
+function StudentDashboard({ summary, deadlines, profileName, mascotVariant }: { summary: DashboardSummary; deadlines: Deadline[]; profileName?: string; mascotVariant: MascotVariant }) {
+  const stats = [
+    ['Từ vựng', summary.vocabulary, LibraryBig], ['Đã thuộc', summary.known, CheckCircle2],
+    ['Khó nhớ', summary.difficult, TriangleAlert], ['Deadline mở', summary.openDeadlines, CalendarClock],
+  ] as const;
+
+  return <div className="page-wrap">
+    <div className="page-heading"><div><span>Profile dashboard</span><h1>Xin chào, {profileName}</h1><p>Theo dõi từ vựng, quiz, flashcard và các mốc học tập cá nhân.</p></div></div>
+    <section className="hero-card">
+      <div className="hero-copy"><span className="eyebrow">Vocabulary workspace</span><h2>Học từ vựng thông minh cùng trợ lý dễ thương.</h2><p>Nhập từ mới, ôn flashcard, làm quiz và duy trì nhịp học mỗi ngày.</p></div>
+      <StudyMascot variant={mascotVariant} message="Hôm nay mình học từ nào?" />
+    </section>
+    <section className="stats-grid">{stats.map(([label, value, Icon]) => <article className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><strong>{value}</strong><span>{label}</span></article>)}</section>
+    <section className="dashboard-grid">
+      <article className="panel"><div className="panel-heading"><div><h3>Tiến độ từ vựng</h3><p>Phân loại từ đã lưu trong thư viện cá nhân.</p></div></div><div className="progress-stack"><Progress label="Đã thuộc" value={summary.vocabulary ? summary.known / summary.vocabulary * 100 : 0} /><Progress label="Khó nhớ" value={summary.vocabulary ? summary.difficult / summary.vocabulary * 100 : 0} /><Progress label="Từ mới" value={summary.vocabulary ? (summary.vocabulary - summary.known - summary.difficult) / summary.vocabulary * 100 : 0} /></div></article>
+      <article className="panel"><div className="panel-heading"><div><h3>Deadline sắp tới</h3><p>Các mục tiêu chưa hoàn thành.</p></div></div>{deadlines.length ? <div className="compact-list">{deadlines.map((item) => <div key={item.id}><strong>{item.title}</strong><span>{new Date(item.due_date).toLocaleDateString('vi-VN')}</span></div>)}</div> : <p className="muted">Chưa có deadline nào.</p>}</article>
+    </section>
+  </div>;
+}
 
 export function DashboardPage() {
   const { user, profile } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [teacherStudents, setTeacherStudents] = useState<TeacherStudent[]>([]);
-  const [teacherVocabulary, setTeacherVocabulary] = useState<TeacherVocabularyItem[]>([]);
+  const [teacherAssignments, setTeacherAssignments] = useState<TeacherAssignmentSummary[]>([]);
+  const [teacherVocabularyCount, setTeacherVocabularyCount] = useState(0);
   const [error, setError] = useState('');
 
   const isTeacher = profile?.role === 'teacher';
@@ -22,22 +117,28 @@ export function DashboardPage() {
     setError('');
     try {
       if (isTeacher) {
-        const [studentsData, vocabularyData] = await Promise.all([
+        const [studentsData, vocabularyData, assignmentData] = await Promise.all([
           listTeacherStudents(user.id),
           listTeacherVocabulary(user.id),
+          listTeacherAssignmentSummaries(user.id),
         ]);
         setTeacherStudents(studentsData);
-        setTeacherVocabulary(vocabularyData);
+        setTeacherVocabularyCount(vocabularyData.length);
+        setTeacherAssignments(assignmentData);
         setSummary(null);
         setDeadlines([]);
         return;
       }
 
-      const [summaryData, deadlineData] = await Promise.all([getDashboardSummary(user.id), listDeadlines(user.id)]);
+      const [summaryData, deadlineData] = await Promise.all([
+        getDashboardSummary(user.id),
+        listDeadlines(user.id),
+      ]);
       setSummary(summaryData);
       setDeadlines(deadlineData.filter((item) => !item.completed).slice(0, 4));
       setTeacherStudents([]);
-      setTeacherVocabulary([]);
+      setTeacherAssignments([]);
+      setTeacherVocabularyCount(0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không tải được dashboard.');
     }
@@ -49,112 +150,75 @@ export function DashboardPage() {
   if (isTeacher && !profile) return <LoadingState />;
 
   if (isTeacher) {
-    const teacherStats = [
-      ['Học viên', teacherStudents.length, Users],
-      ['Kho từ', teacherVocabulary.length, LibraryBig],
-      ['Cần giao', teacherVocabulary.filter((item) => !item.difficulty).length, Upload],
-      ['Import sẵn sàng', 1, FileSpreadsheet],
-    ] as const;
+    const studentCount = teacherStudents.length;
+    const assignedCount = teacherAssignments.reduce((sum, item) => sum + item.word_count, 0);
+    const incompleteCount = teacherAssignments.filter((item) => item.status !== 'known').reduce((sum, item) => sum + item.word_count, 0);
+    const chartData: TeacherChartDatum[] = [
+      {
+        key: 'students',
+        label: 'Học viên',
+        value: studentCount,
+        detail: studentCount ? `${studentCount} học viên hiện đang nằm trong lớp.` : 'Chưa có học viên nào trong lớp.',
+        color: '#2f6df5',
+      },
+      {
+        key: 'store',
+        label: 'Kho từ',
+        value: teacherVocabularyCount,
+        detail: teacherVocabularyCount ? `${teacherVocabularyCount} từ đang nằm trong kho giáo viên.` : 'Kho từ hiện chưa có dữ liệu.',
+        color: '#1dbf73',
+      },
+      {
+        key: 'assigned',
+        label: 'Đã giao',
+        value: assignedCount,
+        detail: assignedCount ? `${assignedCount} từ đã được giao ở các lượt gần đây.` : 'Chưa có lượt giao từ nào gần đây.',
+        color: '#ff9b3d',
+      },
+    ];
 
-    const recentStudents = teacherStudents.slice(0, 4);
-    const recentWords = teacherVocabulary.slice(0, 5);
-    const needsReviewWords = teacherVocabulary.filter((item) => item.difficulty === 'hard' || item.difficulty === 'medium').slice(0, 5);
-
-    return <div className="page-wrap teacher-dashboard-wrap">
+    return <div className="page-wrap teacher-dashboard-wrap teacher-dashboard-fixed teacher-dashboard-management">
       <div className="page-heading teacher-dashboard-heading">
         <div>
-          <span>Teacher workspace</span>
-          <h1>Bảng điều khiển giảng dạy</h1>
-          <p>Quản lý học viên, kho từ và các đầu việc giao từ trong một nơi.</p>
-        </div>
-        <div className="teacher-dashboard-header-actions">
-          <Link className="button primary" to="/students"><Users size={16} /> Thêm học viên</Link>
-          <Link className="button secondary" to="/assign-words"><Upload size={16} /> Giao từ</Link>
-          <Link className="button secondary" to="/library"><LibraryBig size={16} /> Mở kho từ</Link>
-          <Link className="button secondary" to="/import-excel"><FileSpreadsheet size={16} /> Import Excel</Link>
+          <span>Class overview</span>
+          <h1>Tổng quan lớp học</h1>
         </div>
       </div>
 
-      <section className="stats-grid teacher-stats-grid">{teacherStats.map(([label, value, Icon]) => <article className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><strong>{value}</strong><span>{label}</span></article>)}</section>
+      <section className="stats-grid teacher-stats-grid teacher-stats-grid-compact">
+        {([
+          ['Học viên', studentCount, Users],
+          ['Từ trong kho', teacherVocabularyCount, LibraryBig],
+          ['Từ đã giao', assignedCount, Upload],
+          ['Chưa hoàn thành', incompleteCount, TriangleAlert],
+        ] as const).map(([label, value, Icon]) => <article className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><strong>{value}</strong><span>{label}</span></article>)}
+      </section>
 
-      <section className="dashboard-grid teacher-dashboard-grid">
-        <article className="panel">
+      <section className="teacher-dashboard-workspace-grid teacher-dashboard-workspace-grid-short">
+        <article className="panel teacher-dashboard-panel-scroll">
           <div className="panel-heading">
             <div>
-              <h3>Học viên gần đây</h3>
-              <p>{teacherStudents.length ? `${teacherStudents.length} học viên đang theo dõi` : 'Chưa có học viên nào được thêm'}</p>
+              <h3>Tổng quan lớp</h3>
+              <p>Nhấn vào cột để xem thông tin nhanh.</p>
             </div>
           </div>
-          {recentStudents.length ? <div className="compact-list">
-            {recentStudents.map((student) => <div key={student.id}><strong>{student.student_name}</strong><span>{student.student_email}</span></div>)}
-          </div> : <p className="muted">Chưa có học viên nào.</p>}
+          <TeacherChart items={chartData} />
         </article>
 
-        <article className="panel">
+        <article className="panel teacher-dashboard-panel-scroll teacher-dashboard-panel-wide-short">
           <div className="panel-heading">
             <div>
-              <h3>Đầu việc hôm nay</h3>
-              <p>Theo dõi nhanh các bước cần làm trong teacher workflow.</p>
+              <h3>Bài giao gần đây</h3>
+              <p>{teacherAssignments.length ? 'Hiển thị gọn 5 dòng đầu, các lượt còn lại cuộn trong bảng.' : 'Chưa có bài giao gần đây.'}</p>
             </div>
           </div>
-          <div className="compact-list teacher-task-list">
-            <div><strong>Rà kho từ</strong><span>{teacherVocabulary.length ? `${teacherVocabulary.length} từ trong kho` : 'Chưa có từ nào'}</span></div>
-            <div><strong>Chuẩn bị giao từ</strong><span>{teacherVocabulary.filter((item) => !item.difficulty).length} từ chưa gắn độ khó</span></div>
-            <div><strong>Mở danh sách học viên</strong><span>{teacherStudents.length ? 'Có thể bắt đầu giao từ' : 'Thêm học viên trước'}</span></div>
-          </div>
-        </article>
-
-        <article className="panel teacher-dashboard-panel-wide">
-          <div className="panel-heading">
-            <div>
-              <h3>Kho từ giáo viên</h3>
-              <p>{teacherVocabulary.length ? `${teacherVocabulary.length} từ gần đây để tiếp tục biên soạn và giao cho học viên` : 'Kho từ giáo viên chưa có dữ liệu'}</p>
-            </div>
-            <Link className="button secondary" to="/library">Xem tất cả</Link>
-          </div>
-          {recentWords.length ? <div className="compact-list">
-            {recentWords.map((word) => <div key={word.id}><strong>{word.word}</strong><span>{word.difficulty ?? 'Chưa đặt độ khó'}</span></div>)}
-          </div> : <p className="muted">Chưa có từ nào trong kho giáo viên.</p>}
-        </article>
-
-        <article className="panel teacher-dashboard-panel-wide">
-          <div className="panel-heading">
-            <div>
-              <h3>Từ cần ưu tiên xử lý</h3>
-              <p>Các từ đã gắn độ khó để thuận tiện giao và rà soát lại.</p>
-            </div>
-            <Link className="button secondary" to="/assign-words">Mở giao từ</Link>
-          </div>
-          {needsReviewWords.length ? <div className="compact-list">
-            {needsReviewWords.map((word) => <div key={word.id}><strong>{word.word}</strong><span>{word.difficulty ?? 'Chưa đặt độ khó'}</span></div>)}
-          </div> : <p className="muted">Chưa có từ nào cần ưu tiên xử lý.</p>}
+          {teacherAssignments.length ? <TeacherAssignmentTable assignments={teacherAssignments} /> : <p className="muted">Chưa có bài giao nào.</p>}
         </article>
       </section>
     </div>;
   }
 
-  const studentSummary = summary!;
-  const stats = [
-    ['Từ vựng', studentSummary.vocabulary, LibraryBig], ['Đã thuộc', studentSummary.known, CheckCircle2],
-    ['Khó nhớ', studentSummary.difficult, TriangleAlert], ['Deadline mở', studentSummary.openDeadlines, CalendarClock],
-  ] as const;
-
-  return <div className="page-wrap">
-    <div className="page-heading"><div><span>Profile dashboard</span><h1>Xin chào, {profile?.display_name}</h1><p>Theo dõi từ vựng, quiz, flashcard và các mốc học tập cá nhân.</p></div></div>
-    <section className="hero-card">
-      <div className="hero-copy"><span className="eyebrow">Vocabulary workspace</span><h2>Học từ vựng thông minh cùng trợ lý dễ thương.</h2><p>Nhập từ mới, ôn flashcard, làm quiz và duy trì nhịp học mỗi ngày.</p></div>
-      <StudyMascot message="Hôm nay mình học từ nào?" expression="happy" />
-    </section>
-    <section className="stats-grid">{stats.map(([label, value, Icon]) => <article className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><strong>{value}</strong><span>{label}</span></article>)}</section>
-    <section className="dashboard-grid">
-      <article className="panel"><div className="panel-heading"><div><h3>Tiến độ từ vựng</h3><p>Phân loại từ đã lưu trong thư viện cá nhân.</p></div></div><div className="progress-stack"><Progress label="Đã thuộc" value={studentSummary.vocabulary ? studentSummary.known / studentSummary.vocabulary * 100 : 0} /><Progress label="Khó nhớ" value={studentSummary.vocabulary ? studentSummary.difficult / studentSummary.vocabulary * 100 : 0} /><Progress label="Từ mới" value={studentSummary.vocabulary ? (studentSummary.vocabulary - studentSummary.known - studentSummary.difficult) / studentSummary.vocabulary * 100 : 0} /></div></article>
-      <article className="panel"><div className="panel-heading"><div><h3>Deadline sắp tới</h3><p>Các mục tiêu chưa hoàn thành.</p></div></div>{deadlines.length ? <div className="compact-list">{deadlines.map((item) => <div key={item.id}><strong>{item.title}</strong><span>{new Date(item.due_date).toLocaleDateString('vi-VN')}</span></div>)}</div> : <p className="muted">Chưa có deadline nào.</p>}</article>
-    </section>
-  </div>;
+  return <StudentDashboard summary={summary!} deadlines={deadlines} profileName={profile?.display_name} mascotVariant={profile?.mascot_variant ?? 'dog'} />;
 }
 
-function Progress({ label, value }: { label: string; value: number }) {
-  return <div className="progress-row"><div><span>{label}</span><b>{Math.round(value)}%</b></div><div className="progress-track"><i style={{ width: `${Math.min(100, value)}%` }} /></div></div>;
-}
-
-// ponytail: teacher uses a role-specific workspace layout, while student keeps the original learning dashboard.
+// ponytail: teacher dashboard stays honest about available data; a real per-session learned-word metric still needs backend history.

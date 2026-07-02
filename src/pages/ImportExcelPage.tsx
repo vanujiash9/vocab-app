@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import { Navigate } from 'react-router-dom';
 import { EmptyState, ErrorState } from '../components/PageState';
 import { useAuth } from '../contexts/AuthContext';
-import { importTeacherVocabularyBatch, validateVocabularyImportRows } from '../services/data';
+import { importTeacherVocabularyBatch, validateVocabularyImportRows } from '../services/teacher';
 import type { VocabularyExcelRow, VocabularyImportPreviewRow } from '../features/vocabulary-manual/vocabularyManual.types';
 import { mapExcelRowToManualInput } from '../features/vocabulary-manual/vocabularyManual.utils';
 
@@ -19,7 +19,9 @@ export function ImportExcelPage() {
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
-    setLoading(true); setError(''); setMessage('');
+    setLoading(true);
+    setError('');
+    setMessage('');
     try {
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: 'array' });
@@ -54,7 +56,9 @@ export function ImportExcelPage() {
 
   const runImport = async () => {
     if (!user) return;
-    setLoading(true); setError(''); setMessage('');
+    setLoading(true);
+    setError('');
+    setMessage('');
     try {
       const selectedRows = rows.filter((row) => row.status === 'valid' && row.selected).map((row) => row.input);
       const result = await importTeacherVocabularyBatch(user.id, selectedRows);
@@ -74,22 +78,80 @@ export function ImportExcelPage() {
   const duplicate = rows.filter((row) => row.status === 'duplicate').length;
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Teacher import</span><h1>Import Excel</h1><p>Chọn file Excel, preview dữ liệu rồi xác nhận import.</p></div></div>
-    <div className="panel">
-      <input type="file" accept=".xlsx,.xls" onChange={(event) => void onFileChange(event)} disabled={loading} />
+    <div className="page-heading">
+      <div>
+        <span>Teacher import</span>
+        <h1>Import Excel</h1>
+      </div>
+    </div>
+
+    <div className="panel teacher-import-upload-panel compact">
+      <div className="teacher-import-upload-header compact">
+        <div>
+          <strong>Chọn file Excel</strong>
+        </div>
+        <details className="teacher-import-guide-details compact">
+          <summary>
+            <span>Hướng dẫn sử dụng</span>
+            <small>Nhấn để mở / ẩn</small>
+          </summary>
+          <div className="compact-list teacher-dashboard-compact-list teacher-import-guide-list">
+            <div><strong>Cột nên có</strong><span>word, part_of_speech, english_definition, vietnamese_meaning, example, difficulty</span></div>
+            <div><strong>Dòng ví dụ</strong><span>ocean | noun | a large body of water | đại dương | The ocean is vast. | medium</span></div>
+            <div><strong>Độ khó hợp lệ</strong><span>easy, medium, hard</span></div>
+            <div><strong>Lưu ý</strong><span>Mỗi dòng là một từ. Không gộp nhiều ví dụ hoặc nhiều từ trong cùng một ô.</span></div>
+          </div>
+        </details>
+      </div>
+
+      <div className="teacher-import-file-row">
+        <input type="file" accept=".xlsx,.xls" onChange={(event) => void onFileChange(event)} disabled={loading} />
+      </div>
+
       {error && <ErrorState message={error} retry={reset} />}
       {message && <div className="form-message standalone">{message}</div>}
       {loading && <div className="form-message standalone">Đang xử lý file...</div>}
     </div>
-    {total > 0 ? <>
-      <section className="stats-grid">
-        <article className="stat-card"><strong>{total}</strong><span>Tổng số dòng</span></article>
-        <article className="stat-card"><strong>{valid}</strong><span>Hợp lệ</span></article>
-        <article className="stat-card"><strong>{invalid}</strong><span>Lỗi</span></article>
-        <article className="stat-card"><strong>{duplicate}</strong><span>Trùng</span></article>
-      </section>
-      <div className="panel table-wrap"><table><thead><tr><th>Chọn</th><th>Dòng</th><th>Word</th><th>Definition</th><th>Difficulty</th><th>Trạng thái</th><th>Lỗi</th></tr></thead><tbody>{rows.map((row) => <tr key={row.rowNumber}><td>{row.status === 'valid' ? <input type="checkbox" checked={row.selected} onChange={() => toggleRow(row.rowNumber)} /> : '-'}</td><td>{row.rowNumber}</td><td>{row.input.word}</td><td>{row.input.englishDefinition}</td><td>{row.input.difficulty ?? 'unset'}</td><td>{row.status}</td><td>{row.errors.join(', ') || '-'}</td></tr>)}</tbody></table></div>
-      <div className="status-actions"><button className="button secondary" onClick={reset}>Quay lại</button><button className="button primary" disabled={loading || !rows.some((row) => row.status === 'valid' && row.selected)} onClick={() => void runImport()}>Import từ hợp lệ</button></div>
-    </> : <EmptyState title="Chưa có file Excel" description="Upload file để xem preview trước khi import." />}
+
+    <section className="teacher-import-preview-panel">
+      {total > 0 ? <>
+        <section className="stats-grid">
+          <article className="stat-card"><strong>{total}</strong><span>Tổng số dòng</span></article>
+          <article className="stat-card"><strong>{valid}</strong><span>Hợp lệ</span></article>
+          <article className="stat-card"><strong>{invalid}</strong><span>Lỗi</span></article>
+          <article className="stat-card"><strong>{duplicate}</strong><span>Trùng</span></article>
+        </section>
+        <div className="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Chọn</th>
+                <th>Dòng</th>
+                <th>Word</th>
+                <th>Definition</th>
+                <th>Difficulty</th>
+                <th>Trạng thái</th>
+                <th>Lỗi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => <tr key={row.rowNumber}>
+                <td>{row.status === 'valid' ? <input type="checkbox" checked={row.selected} onChange={() => toggleRow(row.rowNumber)} /> : '-'}</td>
+                <td>{row.rowNumber}</td>
+                <td>{row.input.word}</td>
+                <td>{row.input.englishDefinition}</td>
+                <td>{row.input.difficulty ?? 'unset'}</td>
+                <td>{row.status}</td>
+                <td>{row.errors.join(', ') || '-'}</td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
+        <div className="status-actions">
+          <button className="button secondary" onClick={reset}>Quay lại</button>
+          <button className="button primary" disabled={loading || !rows.some((row) => row.status === 'valid' && row.selected)} onClick={() => void runImport()}>Import từ hợp lệ</button>
+        </div>
+      </> : <EmptyState title="Chưa có file Excel" description="Upload file để xem preview trước khi import." />}
+    </section>
   </div>;
 }

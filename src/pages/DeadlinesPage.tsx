@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { CalendarPlus, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { completeDeadline, createDeadline, listDeadlines } from '../services/data';
+import { completeDeadline, createDeadline, listDeadlines } from '../services/deadlines';
 import type { Deadline } from '../types';
 import { EmptyState, LoadingState } from '../components/PageState';
 

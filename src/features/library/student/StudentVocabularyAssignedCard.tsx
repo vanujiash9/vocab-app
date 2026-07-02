@@ -15,39 +15,35 @@ function formatCompactDate(value: string | null): string {
   return new Date(value).toLocaleDateString('vi-VN');
 }
 
-function truncate(text: string | null | undefined, maxLength: number): string {
-  if (!text) return '—';
-  return text.length <= maxLength ? text : `${text.slice(0, maxLength).trim()}…`;
-}
-
 interface StudentVocabularyAssignedCardProps {
   assignedCount: number;
   dueSoonCount: number;
   items: UnifiedStudentVocabularyItem[];
-  onShowAssignedList: () => void;
   onOpenAssignedItem: (assignmentId: string) => void;
 }
 
-export function StudentVocabularyAssignedCard({ assignedCount, dueSoonCount, items, onShowAssignedList, onOpenAssignedItem }: StudentVocabularyAssignedCardProps) {
-  return <section className="panel student-vocabulary-assigned-table">
-    <div className="student-vocabulary-assigned-table-header">
-      <div>
-        <h3>Từ được giao</h3>
-        <p>{assignedCount} từ được giao · {dueSoonCount} từ sắp đến hạn</p>
+export function StudentVocabularyAssignedCard({ assignedCount, dueSoonCount, items, onOpenAssignedItem }: StudentVocabularyAssignedCardProps) {
+  return <section className="panel student-vocabulary-assigned-strip-card">
+    <div className="student-vocabulary-assigned-strip-header">
+      <div className="student-vocabulary-assigned-strip-copy">
+        <p>{assignedCount} từ đang chờ học · {dueSoonCount} từ sắp đến hạn ôn.</p>
       </div>
-      <div className="student-vocabulary-assigned-table-actions">
-        {assignedCount > 0 && <Link className="button secondary" to="/review?source=assigned">Học</Link>}
-        {assignedCount > 6 && <button className="button secondary" onClick={onShowAssignedList}>Xem tất cả</button>}
+      <div className="student-vocabulary-assigned-strip-actions">
+        {assignedCount > 0 && <Link className="button primary small" to="/review?source=assigned">Học ngay</Link>}
       </div>
     </div>
 
-    {items.length ? <div className="student-vocabulary-assigned-strip" role="list" aria-label="Từ được giao gần đây">
-      {items.map((item) => <button key={item.id} className="student-vocabulary-assigned-strip-item" role="listitem" onClick={() => onOpenAssignedItem(item.assignmentId ?? item.id)}>
-        <strong>{item.word}</strong>
-        <span>{STATUS_LABELS[item.status]}</span>
+    {items.length ? <div className="student-vocabulary-assigned-inline-list" role="list" aria-label="Từ giáo viên giao gần đây">
+      {items.map((item) => <button key={item.id} className="student-vocabulary-assigned-inline-item" role="listitem" onClick={() => onOpenAssignedItem(item.assignmentId ?? item.id)}>
+        <div className="student-vocabulary-assigned-inline-top">
+          <strong>{item.word}</strong>
+          <em>{STATUS_LABELS[item.status]}</em>
+        </div>
+        <p>{item.vietnameseMeaning || item.englishDefinition}</p>
         <small>{item.dueAt ? `Hạn ${formatCompactDate(item.dueAt)}` : `Giao ${formatCompactDate(item.assignedAt)}`}</small>
-        {item.teacherNote && <em>{truncate(item.teacherNote, 36)}</em>}
       </button>)}
-    </div> : <div className="student-vocabulary-assigned-empty">Chưa có từ nào được giao.</div>}
+    </div> : <div className="student-vocabulary-assigned-empty">Chưa có từ nào được giáo viên giao.</div>}
   </section>;
 }
+
+// ponytail: assigned words now behave like a compact summary strip instead of a full section table.

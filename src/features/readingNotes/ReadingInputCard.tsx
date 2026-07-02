@@ -7,10 +7,6 @@ interface ReadingInputCardProps {
 
 export function ReadingInputCard({ passage, error, onChange, onStart }: ReadingInputCardProps) {
   return <section className="panel reading-input-card">
-    <div className="reading-card-header">
-      <h3>Đoạn văn tiếng Anh</h3>
-      <p>Dán đoạn văn để bắt đầu đọc và click vào từ bạn chưa biết.</p>
-    </div>
     <textarea
       className="reading-passage-input"
       value={passage}

@@ -198,7 +198,7 @@ export function FlashcardsPage() {
           <div className="flash-back">
             <span>Nghĩa</span>
             <h3>{item.englishDefinition}</h3>
-            {item.vietnameseMeaning && <p>{item.vietnameseMeaning}</p>}
+            <p>{item.vietnameseMeaning || 'Chưa có nghĩa tiếng Việt.'}</p>
             {item.examples[0] && <p>{item.examples[0]}</p>}
           </div>
         </div>

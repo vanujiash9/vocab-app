@@ -62,7 +62,7 @@ function buildAssignButtonLabel(count: number, assigning: boolean): string {
 }
 
 export function AssignWordsPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, profileStatus } = useAuth();
   const [students, setStudents] = useState<TeacherStudent[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [assignedWords, setAssignedWords] = useState<VocabularyAssignment[]>([]);
@@ -198,6 +198,7 @@ export function AssignWordsPage() {
     }
   };
 
+  if (profileStatus === 'loading' || profileStatus === 'missing') return <LoadingState />;
   if (profile?.role !== 'teacher') return <Navigate to="/dashboard" replace />;
   if (loading) return <LoadingState />;
   if (error && !students.length) return <ErrorState message={error} retry={() => window.location.reload()} />;
@@ -205,6 +206,7 @@ export function AssignWordsPage() {
   return <div className="page-wrap assign-page-wrap reference-layout">
     <div className="page-heading assign-page-heading compact simple">
       <div>
+        <span>Assign words</span>
         <h1>Giao từ</h1>
       </div>
     </div>
@@ -215,8 +217,7 @@ export function AssignWordsPage() {
     <section className="panel assign-reference-panel">
       <div className="assign-reference-header">
         <div>
-          <h2>Giao từ</h2>
-          <p>{selectedStudent ? `${selectedStudent.student_name} · ${selectedStudent.student_email}` : 'Chọn học viên để bắt đầu giao từ.'}</p>
+          {selectedStudent ? <p>{selectedStudent.student_name} · {selectedStudent.student_email}</p> : null}
         </div>
         {selectedStudent && <div className="assign-reference-stats">
           <div className="assign-reference-stat neutral">

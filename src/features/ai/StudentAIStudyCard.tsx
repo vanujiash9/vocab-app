@@ -118,21 +118,21 @@ export function StudentAIStudyCard() {
       </div>
 
       <div className="ai-control-group">
-        <h4>Thời lượng</h4>
+        <strong>Thời lượng</strong>
         <div className="filter-row ai-filter-row">
           {minuteOptions.map((value) => <button key={value} className={minutes === value ? 'active' : ''} onClick={() => setMinutes(value)}>{value} phút</button>)}
         </div>
       </div>
 
       <div className="ai-control-group">
-        <h4>Nguồn từ</h4>
+        <strong>Nguồn từ</strong>
         <div className="filter-row ai-filter-row">
           {sourceOptions.map((option) => <button key={option.value} className={source === option.value ? 'active' : ''} onClick={() => setSource(option.value)}>{option.label}</button>)}
         </div>
       </div>
 
       <div className="ai-control-group">
-        <h4>Mục tiêu</h4>
+        <strong>Mục tiêu</strong>
         <div className="filter-row ai-filter-row">
           {goalOptions.map((option) => <button key={option.value} className={goal === option.value ? 'active' : ''} onClick={() => setGoal(option.value)}>{option.label}</button>)}
         </div>
@@ -166,8 +166,8 @@ export function StudentAIStudyCard() {
             <span>{getPlanBadge(result.recommendedMode)}</span>
           </div>
           <div className="status-actions ai-result-action-buttons">
-            <button className={primaryAction === 'flashcard' ? 'button primary' : 'button secondary'} onClick={() => navigate('/flashcards')}><BookOpen size={17} /> Học Flashcard</button>
-            <button className={primaryAction === 'quiz' ? 'button primary' : 'button secondary'} onClick={() => navigate('/quiz')}><ClipboardCheck size={17} /> Làm Quiz</button>
+            <button className={primaryAction === 'flashcard' ? 'button primary' : 'button secondary'} onClick={() => navigate(`/review?source=${source}&mode=flashcard`)}><BookOpen size={17} /> Học Flashcard</button>
+            <button className={primaryAction === 'quiz' ? 'button primary' : 'button secondary'} onClick={() => navigate(`/review?source=${source}&mode=quiz`)}><ClipboardCheck size={17} /> Làm Quiz</button>
           </div>
         </div>}
       >
@@ -176,7 +176,7 @@ export function StudentAIStudyCard() {
             <div className="ai-step-badge">Bước {index + 1}</div>
             <div className="detail-title ai-section-title">
               <div>
-                <h4>{getSectionDisplayTitle(index)}</h4>
+                <h3>{getSectionDisplayTitle(index)}</h3>
                 <p>{getActivityLabel(section.activity)}</p>
               </div>
             </div>
@@ -186,7 +186,7 @@ export function StudentAIStudyCard() {
           </section>)}
         </div>
         <div className="ai-tip-card">
-          <h4>Mẹo học nhanh</h4>
+          <strong>Mẹo học nhanh</strong>
           <p>{result.tip}</p>
         </div>
       </AIResultCard>}

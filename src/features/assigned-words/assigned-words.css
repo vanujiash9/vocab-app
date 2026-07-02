@@ -1,0 +1,856 @@
+.student-vocabulary-page-wrap:has(.assigned-words-stack) {
+  display: flex;
+  flex-direction: column;
+}
+
+.assigned-words-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.assigned-words-empty-state {
+  padding: 24px 0 8px;
+}
+
+.assigned-words-empty-state .compact-list {
+  margin-top: 16px;
+}
+
+.assigned-words-preview-chip {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.assigned-words-preview-chip strong {
+  color: var(--ink);
+}
+
+.assigned-words-preview-chip span {
+  color: var(--muted);
+}
+
+.assigned-words-preview-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.assigned-words-link-row {
+  margin-top: 16px;
+}
+
+.assigned-words-link-row .button {
+  width: fit-content;
+}
+
+.assigned-words-group-empty {
+  padding: 10px 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.assigned-words-group-empty p {
+  margin: 0;
+}
+
+.assigned-words-group-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.assigned-words-group-preview span {
+  border: 1px solid var(--line);
+  background: #f8fbff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.assigned-words-group-more {
+  color: var(--muted) !important;
+}
+
+.assigned-words-card-empty {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.assigned-words-card-empty p {
+  margin: 0;
+}
+
+.assigned-words-card-link {
+  margin-top: 12px;
+}
+
+.assigned-words-card-link .button {
+  width: fit-content;
+}
+
+.assigned-words-card-link-empty {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.assigned-words-card-link-empty a {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.assigned-words-card-link-empty p {
+  margin: 0;
+}
+
+.assigned-words-card-list:empty {
+  display: none;
+}
+
+.assigned-word-group-list,
+.assigned-words-group-list {
+  min-height: 0;
+}
+
+.assigned-word-group.panel {
+  min-height: 0;
+}
+
+.assigned-word-group-empty-inline {
+  margin-top: 12px;
+}
+
+.assigned-word-group-empty-inline p {
+  margin: 0;
+}
+
+.assigned-words-assist-text {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.assigned-words-assist-text a {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.assigned-words-assist-text p {
+  margin: 0;
+}
+
+.assigned-words-empty-panel {
+  padding: 12px 0 0;
+}
+
+.assigned-words-empty-panel .status-actions {
+  margin-top: 16px;
+}
+
+.assigned-words-empty-panel .button {
+  width: fit-content;
+}
+
+.assigned-words-empty-panel .compact-list {
+  margin-top: 16px;
+}
+
+.assigned-words-empty-panel .compact-list > div {
+  justify-content: space-between;
+}
+
+.assigned-words-empty-panel .compact-list strong {
+  color: var(--ink);
+}
+
+.assigned-words-empty-panel .compact-list span {
+  color: var(--muted);
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text {
+  margin-top: 12px;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text p {
+  margin: 0;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:hover {
+  text-decoration: underline;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:active {
+  opacity: 0.8;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited {
+  color: var(--blue);
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited:hover {
+  text-decoration: underline;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited:active {
+  opacity: 0.8;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited {
+  color: var(--blue);
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited:hover {
+  text-decoration: underline;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited:active {
+  opacity: 0.8;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:visited:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a {
+  text-decoration: none;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:hover,
+.assigned-words-empty-panel .assigned-words-assist-text a:focus-visible {
+  text-decoration: underline;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text a:active {
+  opacity: 0.8;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text {
+  line-height: 1.6;
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text strong {
+  color: var(--ink);
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text span {
+  color: var(--muted);
+}
+
+.assigned-words-empty-panel .assigned-words-assist-text + .status-actions {
+  margin-top: 16px;
+}
+
+.assigned-words-empty-panel .status-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.assigned-words-empty-panel .status-actions .button {
+  width: fit-content;
+}
+
+.assigned-words-empty-panel .status-actions .button.secondary {
+  background: #fff;
+}
+
+.assigned-words-empty-panel .status-actions .button.primary {
+  background: linear-gradient(135deg, var(--blue), #5a94ff);
+}
+
+.assigned-words-empty-panel .status-actions .button.primary:hover {
+  opacity: 0.95;
+}
+
+.assigned-words-empty-panel .status-actions .button.secondary:hover {
+  border-color: var(--blue);
+}
+
+.assigned-words-empty-panel .status-actions .button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.assigned-words-empty-panel .status-actions .button:active {
+  transform: translateY(1px);
+}
+
+.assigned-words-empty-panel .status-actions .button svg {
+  flex-shrink: 0;
+}
+
+.assigned-words-empty-panel .status-actions .button span {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button strong {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button small {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button em {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button b {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button i {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button u {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button mark {
+  color: inherit;
+  background: transparent;
+}
+
+.assigned-words-empty-panel .status-actions .button code {
+  color: inherit;
+  background: transparent;
+  padding: 0;
+}
+
+.assigned-words-empty-panel .status-actions .button kbd {
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.assigned-words-empty-panel .status-actions .button samp {
+  color: inherit;
+  background: transparent;
+}
+
+.assigned-words-empty-panel .status-actions .button sub,
+.assigned-words-empty-panel .status-actions .button sup {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button q,
+.assigned-words-empty-panel .status-actions .button cite,
+.assigned-words-empty-panel .status-actions .button dfn,
+.assigned-words-empty-panel .status-actions .button abbr,
+.assigned-words-empty-panel .status-actions .button time,
+.assigned-words-empty-panel .status-actions .button data {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button del,
+.assigned-words-empty-panel .status-actions .button ins {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button var,
+.assigned-words-empty-panel .status-actions .button s,
+.assigned-words-empty-panel .status-actions .button tt {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover,
+.assigned-words-empty-panel .status-actions .button a:focus-visible {
+  text-decoration: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:active {
+  opacity: 1;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited:hover,
+.assigned-words-empty-panel .status-actions .button a:visited:focus-visible {
+  text-decoration: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited:active {
+  opacity: 1;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited:hover,
+.assigned-words-empty-panel .status-actions .button a:visited:focus-visible {
+  text-decoration: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited:active {
+  opacity: 1;
+}
+
+.assigned-words-empty-panel .status-actions .button a:focus-visible {
+  outline: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a svg {
+  flex-shrink: 0;
+}
+
+.assigned-words-empty-panel .status-actions .button a span,
+.assigned-words-empty-panel .status-actions .button a strong {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a small,
+.assigned-words-empty-panel .status-actions .button a em,
+.assigned-words-empty-panel .status-actions .button a b,
+.assigned-words-empty-panel .status-actions .button a i,
+.assigned-words-empty-panel .status-actions .button a u,
+.assigned-words-empty-panel .status-actions .button a mark,
+.assigned-words-empty-panel .status-actions .button a code,
+.assigned-words-empty-panel .status-actions .button a kbd,
+.assigned-words-empty-panel .status-actions .button a samp,
+.assigned-words-empty-panel .status-actions .button a sub,
+.assigned-words-empty-panel .status-actions .button a sup,
+.assigned-words-empty-panel .status-actions .button a q,
+.assigned-words-empty-panel .status-actions .button a cite,
+.assigned-words-empty-panel .status-actions .button a dfn,
+.assigned-words-empty-panel .status-actions .button a abbr,
+.assigned-words-empty-panel .status-actions .button a time,
+.assigned-words-empty-panel .status-actions .button a data,
+.assigned-words-empty-panel .status-actions .button a del,
+.assigned-words-empty-panel .status-actions .button a ins,
+.assigned-words-empty-panel .status-actions .button a var,
+.assigned-words-empty-panel .status-actions .button a s,
+.assigned-words-empty-panel .status-actions .button a tt {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a mark,
+.assigned-words-empty-panel .status-actions .button a code,
+.assigned-words-empty-panel .status-actions .button a kbd,
+.assigned-words-empty-panel .status-actions .button a samp {
+  background: transparent;
+}
+
+.assigned-words-empty-panel .status-actions .button a code,
+.assigned-words-empty-panel .status-actions .button a kbd {
+  padding: 0;
+  box-shadow: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a mark {
+  padding: 0;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover,
+.assigned-words-empty-panel .status-actions .button a:focus-visible,
+.assigned-words-empty-panel .status-actions .button a:active,
+.assigned-words-empty-panel .status-actions .button a:visited {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:focus-visible {
+  outline: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover {
+  text-decoration: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:active {
+  opacity: 1;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited:hover {
+  text-decoration: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited:active {
+  opacity: 1;
+}
+
+.assigned-words-empty-panel .status-actions .button a:visited:focus-visible {
+  outline: none;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover svg,
+.assigned-words-empty-panel .status-actions .button a:focus-visible svg,
+.assigned-words-empty-panel .status-actions .button a:active svg,
+.assigned-words-empty-panel .status-actions .button a:visited svg {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover span,
+.assigned-words-empty-panel .status-actions .button a:focus-visible span,
+.assigned-words-empty-panel .status-actions .button a:active span,
+.assigned-words-empty-panel .status-actions .button a:visited span {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover strong,
+.assigned-words-empty-panel .status-actions .button a:focus-visible strong,
+.assigned-words-empty-panel .status-actions .button a:active strong,
+.assigned-words-empty-panel .status-actions .button a:visited strong {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover small,
+.assigned-words-empty-panel .status-actions .button a:focus-visible small,
+.assigned-words-empty-panel .status-actions .button a:active small,
+.assigned-words-empty-panel .status-actions .button a:visited small {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover em,
+.assigned-words-empty-panel .status-actions .button a:focus-visible em,
+.assigned-words-empty-panel .status-actions .button a:active em,
+.assigned-words-empty-panel .status-actions .button a:visited em {
+  color: inherit;
+}
+
+.assigned-words-empty-panel .status-actions .button a:hover b,
+.assigned-words-empty-panel .status-actions .button a:focus-visible b,
+.assigned-words-empty-panel .status-actions .button a:active b,
+.assigned-words-empty-panel .status-actions .button a:visited b {
+  color: inherit;
+}
+
+/* ---------- header stats (moved out of the panel, into the page heading) ---------- */
+
+.assigned-words-header-stats {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.assigned-words-header-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.assigned-words-header-stats .assigned-words-header-stat strong {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink) !important;
+  font-weight: 700;
+}
+
+.assigned-words-header-stats .assigned-words-header-stat span {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted) !important;
+  font-weight: 500;
+}
+
+/* ---------- toolbar: search + filters always visible, one aligned row ---------- */
+
+.assigned-words-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.assigned-words-search-bar {
+  flex: 1 1 220px;
+  min-width: 200px;
+}
+
+.assigned-words-filter-groups {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.assigned-words-filter-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.assigned-words-filter-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line);
+}
+
+.assigned-words-summary-strip {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- day groups ---------- */
+
+.assigned-words-group-list {
+  display: grid;
+  gap: 14px;
+  flex: 1;
+  min-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.assigned-word-group {
+  display: grid;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.assigned-word-group-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.assigned-word-group-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+.assigned-word-group-toggle svg {
+  transition: transform 0.18s ease;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.assigned-word-group-toggle-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.assigned-word-group-toggle-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.assigned-word-group-toggle-headline strong {
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.assigned-word-group-count {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.assigned-word-group-composition {
+  display: flex;
+  height: 6px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.assigned-word-group-composition-segment {
+  min-width: 4px;
+}
+.assigned-word-group-composition-segment.status-new { background: #94a3b8; }
+.assigned-word-group-composition-segment.status-learning { background: #f5a524; }
+.assigned-word-group-composition-segment.status-known { background: #22a06b; }
+.assigned-word-group-composition-segment.status-difficult { background: #e5484d; }
+
+.assigned-word-group-toggle-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.assigned-word-group-toggle-meta span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- cards: equal height within a row, action row pinned to the bottom ---------- */
+
+.assigned-words-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.assigned-word-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #f8fbff;
+  border: 1px solid var(--line);
+  height: 100%;
+}
+
+.assigned-word-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.assigned-word-card-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.assigned-word-card-headline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.assigned-word-card-headline strong {
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.assigned-word-card-title p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.assigned-word-card-body {
+  display: grid;
+  gap: 10px;
+  flex: 1;
+}
+
+.assigned-word-card-section {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.assigned-word-card-section h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.assigned-word-card-section p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.assigned-word-card-note {
+  background: #fff7ee;
+  border-color: #f0d7b8;
+}
+
+.assigned-word-card-footer {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.assigned-word-card-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 1180px) {
+  .assigned-words-stack {
+    max-width: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .assigned-words-header-stats {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+
+  .assigned-words-header-stat {
+    align-items: flex-start;
+  }
+
+  .assigned-words-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .assigned-words-filter-divider {
+    display: none;
+  }
+
+  .assigned-words-group-list {
+    flex: none;
+    overflow: visible;
+  }
+
+  .assigned-word-group {
+    padding: 16px;
+  }
+
+  .assigned-word-group-toggle {
+    flex-wrap: wrap;
+  }
+
+  .assigned-word-group-toggle-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

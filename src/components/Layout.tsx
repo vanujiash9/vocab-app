@@ -4,13 +4,14 @@ import { Bell, BookText, CalendarDays, FileSpreadsheet, Home, Library, LogOut, M
 import { Avatar } from './avatars/Avatar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { getUnreadNotificationCount } from '../services/data';
+import { getUnreadNotificationCount } from '../services/notifications';
 
 const studentNav = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
   { to: '/lookup', label: 'Tra cứu từ', icon: Search },
   { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookText },
-  { to: '/library', label: 'Từ vựng', icon: Library },
+  { to: '/assigned-words', label: 'Từ giáo viên', icon: Upload },
+  { to: '/library', label: 'Thư viện cá nhân', icon: Library },
   { to: '/review', label: 'Ôn tập', icon: RotateCcw },
   { to: '/deadlines', label: 'Deadline', icon: CalendarDays },
   { to: '/notifications', label: 'Thông báo', icon: Bell },
@@ -20,7 +21,7 @@ const teacherNav = [
   { to: '/dashboard', label: 'Dashboard', icon: Home },
   { to: '/lookup', label: 'Tra cứu từ', icon: Search },
   { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookText },
-  { to: '/library', label: 'Kho từ vựng', icon: Library },
+  { to: '/teacher/library', label: 'Kho từ vựng', icon: Library },
   { to: '/assign-words', label: 'Giao từ', icon: Upload },
   { to: '/import-excel', label: 'Import Excel', icon: FileSpreadsheet },
   { to: '/students', label: 'Học viên', icon: Users },
@@ -57,6 +58,11 @@ export function Layout() {
 
     void loadUnreadCount();
 
+    const handleNotificationsChanged = () => {
+      void loadUnreadCount();
+    };
+    window.addEventListener('notifications:changed', handleNotificationsChanged);
+
     const channel = supabase
       .channel(`notifications:${user.id}`)
       .on(
@@ -75,6 +81,7 @@ export function Layout() {
 
     return () => {
       active = false;
+      window.removeEventListener('notifications:changed', handleNotificationsChanged);
       void supabase.removeChannel(channel);
     };
   }, [user]);

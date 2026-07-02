@@ -3,11 +3,11 @@ import { Navigate } from 'react-router-dom';
 import { Trash2, UserPlus } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 import { useAuth } from '../contexts/AuthContext';
-import { addTeacherStudentByEmail, listTeacherStudents, removeTeacherStudent } from '../services/data';
+import { addTeacherStudentByEmail, listTeacherStudents, removeTeacherStudent } from '../services/teacher';
 import type { TeacherStudent } from '../types';
 
 export function StudentsPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, profileStatus } = useAuth();
   const [items, setItems] = useState<TeacherStudent[]>([]);
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -48,11 +48,12 @@ export function StudentsPage() {
     await load();
   };
 
+  if (profileStatus === 'loading' || profileStatus === 'missing') return <LoadingState />;
   if (profile?.role !== 'teacher') return <Navigate to="/dashboard" replace />;
   if (loading) return <LoadingState />;
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Teacher workspace</span><h1>Học viên</h1><p>Thêm học viên trực tiếp bằng email tài khoản student.</p></div></div>
+    <div className="page-heading"><div><span>Teacher workspace</span><h1>Học viên</h1></div></div>
     <form className="search-bar panel" onSubmit={submit}><UserPlus size={20} /><input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email học viên..." /><button className="button primary">Thêm học viên</button></form>
     {message && <div className="form-message standalone">{message}</div>}
     {error && <ErrorState message={error} retry={() => void load()} />}

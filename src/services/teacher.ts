@@ -1,0 +1,15 @@
+export {
+  addTeacherStudentByEmail,
+  importTeacherVocabularyBatch,
+  listAssignmentsForStudent,
+  listTeacherAssignmentSummaries,
+  listTeacherStudents,
+  listTeacherVocabulary,
+  removeTeacherStudent,
+  saveManualTeacherVocabulary,
+  saveTeacherVocabularyDetails,
+  updateAssignmentStatus,
+  updateTeacherVocabularyDifficulty,
+  updateTeacherVocabularyNote,
+  validateVocabularyImportRows,
+} from './data';

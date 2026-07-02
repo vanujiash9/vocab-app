@@ -1,0 +1,6 @@
+app/
+requirements.txt
+tests/
+.venv/
+__pycache__/
+*.pyc

@@ -1,0 +1,626 @@
+.review-page-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #172033;
+}
+
+.review-page-heading {
+  margin-bottom: 16px;
+}
+
+.review-page-heading span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.review-page-heading h1 {
+  margin: 6px 0;
+  font-size: 28px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.review-page-heading p {
+  max-width: 680px;
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.review-shell {
+  width: 100%;
+}
+
+.review-setup-card,
+.review-study-card,
+.review-summary-panel,
+.review-empty-panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.review-setup-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.review-setup-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f9fafb;
+  color: #111827;
+  text-align: left;
+}
+
+.review-setup-toggle-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.review-setup-toggle-copy strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.review-setup-toggle-copy span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.review-setup-filters {
+  display: grid;
+  gap: 14px;
+  padding: 4px 0;
+}
+
+.review-setup-row {
+  display: grid;
+  gap: 8px;
+}
+
+.review-setup-row-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.review-chip-row,
+.review-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-chip-row button,
+.review-mode-tabs button {
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.review-chip-row button:hover,
+.review-mode-tabs button:hover {
+  border-color: #c7d2fe;
+  background: #f5f7ff;
+}
+
+.review-chip-row button.active,
+.review-mode-tabs button.active {
+  border-color: #6366f1;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.review-word-picker-group {
+  display: grid;
+  gap: 10px;
+}
+
+.review-word-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.review-word-picker-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #111827;
+}
+
+.review-word-picker-note {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.review-word-picker-header > span {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.review-word-picker-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  max-height: 430px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.review-word-picker-list button {
+  position: relative;
+  min-height: 72px;
+  padding: 12px 38px 12px 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.review-word-picker-list button:hover {
+  border-color: #c7d2fe;
+  background: #f9fafb;
+}
+
+.review-word-picker-list button.selected {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.review-word-picker-list strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.review-word-picker-list span {
+  display: -webkit-box;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.review-word-check {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #6366f1;
+  color: #ffffff;
+}
+
+.review-word-picker-empty {
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #d1d5db;
+  border-radius: 14px;
+  color: #6b7280;
+  background: #f9fafb;
+  font-size: 14px;
+}
+
+.review-setup-actions {
+  display: flex;
+}
+
+.review-start-button {
+  width: 100%;
+  height: 44px;
+  justify-content: center;
+}
+
+.review-progress-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.review-progress-card strong {
+  font-size: 13px;
+  color: #111827;
+}
+
+.review-text-button {
+  border: 0;
+  background: transparent;
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-study-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.review-study-shell .review-mode-tabs {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.review-flashcard-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.review-flashcard-button {
+  min-height: 300px;
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.review-flashcard-face {
+  padding: 34px 28px;
+}
+
+.review-flashcard-eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #6366f1;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.flash-front h2 {
+  margin: 0 0 8px;
+  font-size: 38px;
+  color: #111827;
+}
+
+.flash-front p,
+.flash-back p {
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.flash-back h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  color: #111827;
+}
+
+.review-study-card {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.review-quiz-progress,
+.quiz-progress {
+  display: flex;
+  justify-content: space-between;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.review-quiz-card h2,
+.review-typing-prompt h2,
+.review-summary-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  line-height: 1.4;
+}
+
+.answer-list {
+  display: grid;
+  gap: 10px;
+}
+
+.answer-list button {
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111827;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.answer-list button:hover {
+  background: #f9fafb;
+  border-color: #c7d2fe;
+}
+
+.answer-list button.selected {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.answer-list button.correct {
+  border-color: #16a34a;
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.answer-list button.wrong {
+  border-color: #dc2626;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.quiz-feedback,
+.review-typing-feedback {
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quiz-feedback.correct,
+.review-typing-feedback.correct {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.quiz-feedback.wrong,
+.review-typing-feedback.wrong {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.review-study-actions,
+.status-actions,
+.review-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.review-study-actions .button,
+.review-summary-actions .button {
+  min-height: 40px;
+}
+
+.review-typing-prompt {
+  display: grid;
+  gap: 8px;
+}
+
+.review-typing-eyebrow {
+  color: #6366f1;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.review-typing-example {
+  color: #6b7280;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.review-typing-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.review-typing-input {
+  flex: 1;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 700;
+  outline: none;
+}
+
+.review-typing-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
+.review-typing-input.correct {
+  border-color: #16a34a;
+  background: #ecfdf5;
+}
+
+.review-typing-input.wrong {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.review-matching-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.review-matching-column {
+  display: grid;
+  gap: 10px;
+}
+
+.review-match-card {
+  min-height: 52px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-match-card:hover:not(:disabled) {
+  border-color: #c7d2fe;
+  background: #f9fafb;
+}
+
+.review-match-card.selected {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.review-match-card.matched {
+  border-color: #16a34a;
+  background: #ecfdf5;
+  color: #166534;
+  opacity: 0.7;
+}
+
+.review-match-card.mismatch {
+  border-color: #dc2626;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.review-matching-round-complete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #ecfdf5;
+  color: #166534;
+  font-weight: 700;
+}
+
+.review-summary-panel {
+  padding: 24px;
+}
+
+.review-summary-header p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.review-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.study-quick-chip {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #f9fafb;
+}
+
+.study-quick-chip strong {
+  display: block;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.study-quick-chip span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.review-inline-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .review-page-wrap {
+    padding: 14px;
+  }
+
+  .review-page-heading h1 {
+    font-size: 24px;
+  }
+
+  .review-progress-card,
+  .review-word-picker-header {
+    display: grid;
+  }
+
+  .review-word-picker-list {
+    grid-template-columns: 1fr;
+    max-height: 360px;
+  }
+
+  .review-mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .review-matching-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-study-actions,
+  .status-actions,
+  .review-summary-actions {
+    display: grid;
+  }
+
+  .review-study-actions .button,
+  .status-actions .button,
+  .review-summary-actions .button {
+    width: 100%;
+  }
+}

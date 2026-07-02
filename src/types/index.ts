@@ -1,6 +1,7 @@
 export type UserRole = 'teacher' | 'student';
 export type VocabularyStatus = 'new' | 'learning' | 'known' | 'difficult';
 export type TeacherVocabularyDifficulty = 'easy' | 'medium' | 'hard';
+export type MascotVariant = 'dog' | 'cat_knight' | 'korok' | 'kitsune' | 'cute_fox' | 'hirono' | 'molly' | 'vanellope';
 
 export interface Profile {
   id: string;
@@ -10,6 +11,7 @@ export interface Profile {
   avatar_id: string;
   daily_goal: number;
   reminder_enabled: boolean;
+  mascot_variant: MascotVariant;
   created_at: string;
 }
 
@@ -142,7 +144,16 @@ export interface VocabularyAssignment {
   status: VocabularyStatus;
   note: string | null;
   assigned_at: string;
+  due_at?: string | null;
   completed_at: string | null;
+}
+
+export interface TeacherAssignmentSummary {
+  assigned_at: string;
+  student_id: string;
+  student_name: string;
+  word_count: number;
+  status: VocabularyStatus;
 }
 
 export interface AppNotification {

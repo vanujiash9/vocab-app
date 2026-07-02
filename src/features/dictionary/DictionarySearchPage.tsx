@@ -40,7 +40,7 @@ export function DictionarySearchPage() {
   };
 
   return <div className="page-wrap">
-    <div className="page-heading"><div><span>Dictionary lookup</span><h1>Tra cứu từ</h1><p>{profile?.role === 'teacher' ? 'Tra từ bằng Dictionary API rồi lưu vào Kho từ vựng.' : 'Tra từ bằng Dictionary API rồi lưu vào Thư viện từ.'}</p></div></div>
+    <div className="page-heading"><div><span>Dictionary lookup</span><h1>Tra cứu từ</h1></div></div>
     <DictionarySearchForm loading={lookupState.status === 'loading'} onSearch={(word) => void search(word)} />
     {lookupState.status === 'idle' && <EmptyState title="Chưa tìm kiếm" description="Nhập một từ tiếng Anh để xem định nghĩa, ví dụ và phát âm." />}
     {lookupState.status === 'loading' && <LoadingState />}

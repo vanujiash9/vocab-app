@@ -1,21 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import './LibraryPage.css';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { NavigateOptions } from 'react-router-dom';
 import { Plus, Search, Upload, Volume2 } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 import { useAuth } from '../contexts/AuthContext';
 import { VocabularyManualForm } from '../features/vocabulary-manual/VocabularyManualForm';
 import type { VocabularyManualInput } from '../features/vocabulary-manual/vocabularyManual.types';
-import { StudentVocabularyPage } from '../features/library/student/StudentVocabularyPage';
 import {
   listTeacherVocabulary,
   saveManualTeacherVocabulary,
-  updateTeacherVocabularyDifficulty,
-  updateTeacherVocabularyNote,
-} from '../services/data';
+  saveTeacherVocabularyDetails,
+} from '../services/teacher';
 import type { TeacherVocabularyDifficulty, TeacherVocabularyItem } from '../types';
-import type { UnifiedVocabularyFilter } from '../services/vocabulary';
 
 type TeacherFilter = 'all' | 'unset' | TeacherVocabularyDifficulty;
 
@@ -32,15 +29,7 @@ function playAudio(url: string | null) {
 }
 
 export function LibraryPage() {
-  const { profile } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  if (profile?.role === 'teacher') {
-    return <TeacherVocabularyStore />;
-  }
-
-  const initialFilter: UnifiedVocabularyFilter = searchParams.get('filter') === 'assigned' ? 'assigned' : 'all';
-  return <StudentVocabularyPage initialFilter={initialFilter} onFilterParamChange={(filter) => setSearchParams(filter === 'assigned' ? { filter: 'assigned' } : {})} />;
+  return <TeacherVocabularyStore />;
 }
 
 function TeacherVocabularyStore() {
@@ -95,21 +84,35 @@ function TeacherVocabularyStore() {
 
   const saveTeacherDetail = async () => {
     if (!selected) return;
-    await updateTeacherVocabularyNote(selected.id, note);
-    await updateTeacherVocabularyDifficulty(selected.id, difficulty || null);
-    await load();
+    setMessage('');
+    setError('');
+    try {
+      await saveTeacherVocabularyDetails(selected.id, { note, difficulty: difficulty || null });
+      setMessage('Đã lưu ghi chú và mức độ.');
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không lưu được thay đổi trong kho từ.');
+    }
   };
 
   const saveManual = async (data: VocabularyManualInput) => {
     if (!user) return;
-    const result = await saveManualTeacherVocabulary(user.id, data);
-    if (result.status === 'duplicate') {
-      setMessage('Từ này đã có trong kho từ.');
-      return;
+    setMessage('');
+    setError('');
+    try {
+      const result = await saveManualTeacherVocabulary(user.id, data);
+      if (result.status === 'duplicate') {
+        setMessage('Từ này đã có trong kho từ.');
+        setShowManualForm(false);
+        await load();
+        return;
+      }
+      setMessage('Đã lưu từ vào kho từ.');
+      setShowManualForm(false);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không lưu được từ vào kho từ.');
     }
-    setMessage('Đã lưu từ vào kho từ.');
-    setShowManualForm(false);
-    await load();
   };
 
   const toggleChecked = (id: string) => {
@@ -131,7 +134,7 @@ function TeacherVocabularyStore() {
         setNote(item.note ?? '');
         setDifficulty(item.difficulty ?? '');
       }}><input type="checkbox" checked={checked.includes(item.dictionary_entry_id)} onChange={() => toggleChecked(item.dictionary_entry_id)} onClick={(event) => event.stopPropagation()} /><div><strong>{item.word}</strong><span>{item.phonetic || 'Chưa có phiên âm'}</span></div><span className={`status ${item.difficulty ?? 'new'}`}>{item.difficulty ?? 'unset'}</span></button>)}</div> : <EmptyState title="Kho từ đang trống" description="Tra cứu từ rồi thêm vào Kho từ vựng." />}</div>
-      <div className="panel word-detail">{selected ? <><div className="detail-title"><div><h2>{selected.word}</h2><p>{selected.phonetic || '/phonetic/'}{selected.part_of_speech ? ` · ${selected.part_of_speech}` : ''}</p></div><button className="icon-button" onClick={() => playAudio(selected.audio_url)} disabled={!selected.audio_url} aria-label="Nghe phát âm"><Volume2 size={19} /></button></div><div className="detail-block"><h4>Mức độ</h4><select value={difficulty} onChange={(event) => setDifficulty(event.target.value as TeacherVocabularyDifficulty | '')}><option value="">Chưa đặt</option><option value="easy">easy</option><option value="medium">medium</option><option value="hard">hard</option></select></div><div className="detail-block"><h4>Ghi chú giáo viên</h4><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ghi chú cách dạy, nhóm chủ đề..." /><div className="status-actions"><button className="button primary" onClick={() => void saveTeacherDetail()}>Lưu thay đổi</button></div></div></> : <EmptyState title="Chọn một từ" description="Thông tin chi tiết sẽ hiển thị ở đây." />}</div>
+      <div className="panel word-detail">{selected ? <><div className="detail-title"><div><h2>{selected.word}</h2><p>{selected.phonetic || '/phonetic/'}{selected.part_of_speech ? ` · ${selected.part_of_speech}` : ''}</p></div><button className="icon-button" onClick={() => playAudio(selected.audio_url)} disabled={!selected.audio_url} aria-label="Nghe phát âm"><Volume2 size={19} /></button></div><div className="detail-block"><h3>Mức độ</h3><select value={difficulty} onChange={(event) => setDifficulty(event.target.value as TeacherVocabularyDifficulty | '')}><option value="">Chưa đặt</option><option value="easy">easy</option><option value="medium">medium</option><option value="hard">hard</option></select></div><div className="detail-block"><h3>Ghi chú giáo viên</h3><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ghi chú cách dạy, nhóm chủ đề..." /><div className="status-actions"><button className="button primary" onClick={() => void saveTeacherDetail()}>Lưu thay đổi</button></div></div></> : <EmptyState title="Chọn một từ" description="Thông tin chi tiết sẽ hiển thị ở đây." />}</div>
     </section>
   </div>;
 }

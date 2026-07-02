@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { BookOpen, Copy, Plus, Trash2, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { createCourse, deleteCourse, joinCourse, listCourses, listLessons, createLesson } from '../services/data';
+import { createCourse, createLesson, deleteCourse, joinCourse, listCourses, listLessons } from '../services/courses';
 import type { Course, Lesson } from '../types';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 

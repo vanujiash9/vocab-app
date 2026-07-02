@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../types';
+import { createProfileForUser, getProfileByUserId } from '../services/auth';
 
 interface SignUpInput {
   email: string;
@@ -9,11 +10,15 @@ interface SignUpInput {
   displayName: string;
 }
 
+export type ProfileStatus = 'idle' | 'loading' | 'ready' | 'missing' | 'error';
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  profileStatus: ProfileStatus;
+  profileError: string;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (input: SignUpInput) => Promise<string>;
   signOut: () => Promise<void>;
@@ -21,33 +26,69 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const PROFILE_RETRY_DELAYS_MS = [0, 250, 750] as const;
+
+function delay(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileStatus, setProfileStatus] = useState<ProfileStatus>('idle');
+  const [profileError, setProfileError] = useState('');
 
   const loadProfile = async (userId: string) => {
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    if (error) throw error;
-    setProfile(data as Profile);
+    setProfileStatus('loading');
+    setProfileError('');
+
+    for (const waitMs of PROFILE_RETRY_DELAYS_MS) {
+      if (waitMs) await delay(waitMs);
+      const data = await getProfileByUserId(userId);
+      if (data) {
+        setProfile(data as Profile);
+        setProfileStatus('ready');
+        return;
+      }
+    }
+
+    setProfile(null);
+    setProfileStatus('missing');
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session?.user) await loadProfile(data.session.user.id);
-      setLoading(false);
-    });
+    let active = true;
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    const syncSession = async (nextSession: Session | null) => {
+      if (!active) return;
       setSession(nextSession);
-      if (nextSession?.user) await loadProfile(nextSession.user.id);
-      else setProfile(null);
-      setLoading(false);
+
+      if (!nextSession?.user) {
+        setProfile(null);
+        setProfileStatus('idle');
+        setProfileError('');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        await loadProfile(nextSession.user.id);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void supabase.auth.getSession().then(({ data }) => syncSession(data.session));
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      void syncSession(nextSession);
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -55,6 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     profile,
     loading,
+    profileStatus,
+    profileError,
     signIn: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -66,7 +109,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { data: { display_name: displayName } },
       });
       if (error) throw error;
-      return data.session ? 'Đăng ký thành công.' : 'Đăng ký thành công. Bạn có thể đăng nhập sau khi Supabase hoàn tất tạo tài khoản.';
+      if (data.user && data.session) {
+        const existingProfile = await getProfileByUserId(data.user.id);
+        if (!existingProfile) {
+          await createProfileForUser({
+            userId: data.user.id,
+            email: data.user.email ?? email,
+            displayName,
+          });
+        }
+      }
+      return data.session
+        ? 'Đăng ký thành công. Đang hoàn tất hồ sơ tài khoản...'
+        : 'Đăng ký thành công. Bạn có thể đăng nhập sau khi Supabase hoàn tất tạo tài khoản.';
     },
     signOut: async () => {
       const { error } = await supabase.auth.signOut();
@@ -75,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshProfile: async () => {
       if (session?.user) await loadProfile(session.user.id);
     },
-  }), [session, profile, loading]);
+  }), [session, profile, loading, profileStatus, profileError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

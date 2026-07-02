@@ -54,13 +54,13 @@ export function TeacherAIWordSetCard() {
         </div>
       </div>
       <div className="detail-block ai-control-block">
-        <h4>Mục tiêu</h4>
+        <strong>Mục tiêu</strong>
         <div className="filter-row ai-filter-row">
           {goalOptions.map((option) => <button key={option.value} className={goal === option.value ? 'active' : ''} onClick={() => setGoal(option.value)}>{option.label}</button>)}
         </div>
       </div>
       <div className="detail-block ai-control-block">
-        <h4>Số lượng từ</h4>
+        <strong>Số lượng từ</strong>
         <div className="filter-row ai-filter-row">
           {countOptions.map((value) => <button key={value} className={count === value ? 'active' : ''} onClick={() => setCount(value)}>{value}</button>)}
         </div>
@@ -82,14 +82,14 @@ export function TeacherAIWordSetCard() {
       >
         <div className="ai-section-stack">
           {response.result.groups.map((group) => <section key={group.title} className="ai-section-card">
-            <div className="detail-title ai-section-title"><div><h4>{group.title}</h4></div></div>
+            <div className="detail-title ai-section-title"><div><h3>{group.title}</h3></div></div>
             <div className="ai-pill-list">
               {group.words.map((word) => <span key={`${group.title}:${word}`} className="role-pill ai-word-pill">{word}</span>)}
             </div>
           </section>)}
         </div>
         <div className="detail-block">
-          <h4>Lời nhắn cho học viên</h4>
+          <h3>Lời nhắn cho học viên</h3>
           <p>{response.result.messageToStudent}</p>
         </div>
       </AIResultCard>}

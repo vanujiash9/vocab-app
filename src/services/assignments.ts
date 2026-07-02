@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { listAssignmentsForStudent, listTeacherStudents, listTeacherVocabulary } from './data';
+import { assignVocabularyToStudents, listAssignmentsForStudent, listTeacherStudents, listTeacherVocabulary } from './data';
 import type { TeacherStudent, TeacherVocabularyDifficulty, TeacherVocabularyItem, VocabularyAssignment } from '../types';
 
 const RECENT_WORD_WINDOW_DAYS = 7;
@@ -144,50 +144,15 @@ export async function createVocabularyAssignments(input: CreateVocabularyAssignm
     ((existingRows ?? []) as Array<{ student_id: string; dictionary_entry_id: string }>).map((row) => `${row.student_id}:${row.dictionary_entry_id}`),
   );
 
-  const rowsToInsert = uniqueStudentIds.flatMap((studentId) => uniqueEntryIds
-    .filter((dictionaryEntryId) => !existingPairs.has(`${studentId}:${dictionaryEntryId}`))
-    .map((dictionaryEntryId) => ({
-      teacher_id: input.teacherId,
-      student_id: studentId,
-      dictionary_entry_id: dictionaryEntryId,
-      status: 'new',
-      note: input.note?.trim() || null,
-      // ponytail: dueDate is accepted by the UI/service contract but not persisted because the current schema in this repo does not confirm a due-date column on vocabulary_assignments.
-    })));
-
-  if (!rowsToInsert.length) {
-    return {
-      createdAssignments: 0,
-      skippedExistingAssignments: uniqueStudentIds.length * uniqueEntryIds.length,
-      notifiedStudentIds: [],
-    };
-  }
-
-  const { error: insertError } = await supabase.from('vocabulary_assignments').insert(rowsToInsert);
-  if (insertError) throw insertError;
-
-  const createdCountByStudent = rowsToInsert.reduce<Record<string, number>>((counts, row) => ({
-    ...counts,
-    [row.student_id]: (counts[row.student_id] ?? 0) + 1,
-  }), {});
-
-  const notifications = Object.entries(createdCountByStudent).map(([studentId, count]) => ({
-    user_id: studentId,
-    actor_id: input.teacherId,
-    type: 'vocabulary_assignment',
-    title: 'Bạn có từ vựng mới được giao',
-    message: `Giáo viên đã giao ${count} từ mới cho bạn.`,
-  }));
-
-  if (notifications.length) {
-    const { error: notificationError } = await supabase.from('notifications').insert(notifications);
-    if (notificationError) throw notificationError;
-  }
+  await assignVocabularyToStudents(input.teacherId, uniqueStudentIds, uniqueEntryIds);
 
   const requestedTotal = uniqueStudentIds.length * uniqueEntryIds.length;
+  const createdAssignments = requestedTotal - existingPairs.size;
   return {
-    createdAssignments: rowsToInsert.length,
-    skippedExistingAssignments: requestedTotal - rowsToInsert.length,
-    notifiedStudentIds: Object.keys(createdCountByStudent),
+    createdAssignments,
+    skippedExistingAssignments: existingPairs.size,
+    notifiedStudentIds: createdAssignments ? uniqueStudentIds : [],
   };
 }
+
+// ponytail: assignment creation now delegates to the DB RPC so assignment + notification side effects stay in one transaction; add note/dueDate support there when the schema really uses them.

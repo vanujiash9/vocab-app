@@ -88,7 +88,7 @@ export function VocabularyManualForm({ role, open, onClose, onSubmit }: Vocabula
         </label>
       </div>
       <section className="detail-block manual-vocabulary-extra">
-        <h4>Thông tin bổ sung</h4>
+        <h3>Thông tin bổ sung</h3>
         <div className="manual-vocabulary-grid">
           <label className="manual-vocabulary-field">
             <span>Nghĩa tiếng Việt</span>
