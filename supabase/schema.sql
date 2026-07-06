@@ -285,7 +285,12 @@ create policy "teacher delete lessons" on public.lessons for delete to authentic
 create policy "vocabulary own all" on public.vocabulary for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "dictionary entries select authenticated" on public.dictionary_entries for select to authenticated using (true);
-create policy "dictionary entries insert authenticated" on public.dictionary_entries for insert to authenticated with check (true);
+create policy "dictionary entries insert authenticated" on public.dictionary_entries for insert to authenticated with check (
+  btrim(coalesce(word, '')) <> ''
+  and btrim(coalesce(normalized_word, '')) <> ''
+  and normalized_word = lower(btrim(normalized_word))
+  and provider = any (array['manual', 'dictionaryapi.dev', 'import-csv'])
+);
 create policy "dictionary entries update teachers" on public.dictionary_entries for update to authenticated using (public.is_teacher()) with check (public.is_teacher());
 create policy "dictionary entries delete teachers" on public.dictionary_entries for delete to authenticated using (public.is_teacher());
 

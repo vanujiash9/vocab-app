@@ -50,7 +50,7 @@ const teacherSections: NavSection[] = [
     items: [
       { to: '/lookup', label: 'Tra cứu từ', icon: Search },
       { to: '/library', label: 'Kho từ vựng', icon: Library },
-      { to: '/import-excel', label: 'Import Excel', icon: FileSpreadsheet },
+      { to: '/import-excel', label: 'Nhập CSV', icon: FileSpreadsheet },
     ],
   },
 ];
@@ -93,8 +93,8 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     description: 'Chọn học viên, chọn từ, rồi xác nhận.',
   },
   '/import-excel': {
-    title: 'Nhập dữ liệu',
-    description: 'Bổ sung tài nguyên hàng loạt.',
+    title: 'Nhập CSV từ Excel',
+    description: 'Bổ sung bộ từ hàng loạt bằng file CSV export từ Excel.',
   },
   '/students': {
     title: 'Quản lý học viên',
@@ -178,7 +178,7 @@ export function Layout() {
             <strong>{activeMeta.title}</strong>
             <p className="muted">{profile?.role === 'teacher' ? 'Không gian giáo viên' : 'Không gian học từ vựng'}</p>
           </div>
-          <span className="role-pill mini">{profile?.role}</span>
+          <span className="role-pill mini">{profile?.role === 'teacher' ? 'Giáo viên' : 'Học viên'}</span>
         </header>
         <Outlet />
       </main>

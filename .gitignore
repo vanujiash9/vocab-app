@@ -21,6 +21,7 @@ vite.config.d.ts
 .env
 .env.*
 !.env.example
+supabase-secrets.env
 
 # Supabase local files
 supabase/.temp/

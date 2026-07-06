@@ -38,6 +38,26 @@ VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 
 Lấy hai giá trị này tại **Project Settings > API**.
 
+> Chỉ đặt các biến `VITE_*` an toàn để lộ ở client. Mọi secret server-side hoặc API key riêng phải nằm ngoài Vite env client và ngoài repo.
+> Nếu một key từng xuất hiện trong file local như `supabase-secrets.env`, hãy coi key đó đã lộ và **rotate ngay** trước khi deploy.
+
+App sẽ fail fast nếu thiếu `VITE_SUPABASE_URL` hoặc `VITE_SUPABASE_ANON_KEY`, nên hãy cấu hình hai biến này đầy đủ cho môi trường Preview và Production.
+
+## 3.1 Checklist hardening trước production
+
+- Rotate mọi key/API secret từng lộ trong local workspace.
+- Bật leaked password protection trong Supabase Auth.
+- Review lại quyền `SECURITY DEFINER` functions nếu không muốn public/authenticated gọi trực tiếp.
+- Xác nhận `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY` đã được set ở môi trường deploy.
+- Không đưa file secret local như `supabase-secrets.env` vào artifact deploy hoặc git workflow.
+- Chạy lại `npm run build`, `npm run test:unit`, và `npm run test:e2e` trước khi release.
+
+## 3.2 Cấu hình schema production
+
+Ưu tiên áp dụng migration trong `supabase/migrations/` thay vì chỉnh tay lệch với repo. Chỉ dùng `supabase/schema.sql` để bootstrap môi trường mới hoàn toàn khi cần.
+
+## 4. Cài và chạy
+
 ## 4. Cài và chạy
 
 ```bash
@@ -54,6 +74,24 @@ Build production:
 pnpm build
 pnpm preview
 ```
+
+## 4.1 Deploy lên Vercel
+
+Repo đã có cấu hình tối thiểu cho Vercel qua `vercel.json`.
+
+Thiết lập project trên Vercel:
+
+- Framework preset: `Vite`
+- Build command: `pnpm build`
+- Output directory: `dist`
+- Root directory: repo root
+
+Thiết lập biến môi trường cho Preview và Production:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Nếu bạn deploy branch `feat/polish-teacher-student-import`, Vercel sẽ tạo preview deployment cho branch đó sau khi project được kết nối với GitHub repo.
 
 ## 5. Chức năng
 

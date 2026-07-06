@@ -43,7 +43,7 @@ function AssignSummary({ selectedStudentsCount, selectedWordsCount, canAssign, a
 }
 
 function AssignHeading({ canAssign, actionLabel, onAssign, onImport }: { canAssign: boolean; actionLabel: string; onAssign: () => void; onImport: () => void }) {
-  return <div className="page-heading assign-page-heading"><div><span>Teacher assignment</span><h1>Giao từ</h1><p>Chọn học viên, chọn từ rồi xác nhận trong một flow ngắn gọn.</p></div><div className="assign-heading-actions"><button className="button secondary" onClick={onImport}><FileSpreadsheet size={17} /> Import Excel</button><button className="button primary" disabled={!canAssign} onClick={onAssign}><Send size={17} /> {actionLabel}</button></div></div>;
+  return <div className="page-heading assign-page-heading"><div><span>Teacher assignment</span><h1>Giao từ</h1><p>Chọn học viên, chọn từ rồi xác nhận trong một flow ngắn gọn.</p></div><div className="assign-heading-actions"><button className="button secondary" onClick={onImport}><FileSpreadsheet size={17} /> Nhập CSV</button><button className="button primary" disabled={!canAssign} onClick={onAssign}><Send size={17} /> {actionLabel}</button></div></div>;
 }
 
 function getFilteredWords(words: TeacherVocabularyItem[], query: string) {
