@@ -39,20 +39,21 @@ export function AuthPage() {
   return (
     <div className="auth-page">
       <section className="auth-visual">
-        <div className="auth-brand"><div className="brand-mark">VN</div><div><strong>IELTS Vocabulary OS</strong><span>Blue study operating system</span></div></div>
-        <div className="auth-copy"><span className="eyebrow">Học có hệ thống</span><h1>Mỗi ngày một chút, từ vựng sẽ thành phản xạ.</h1><p>Teacher tạo khóa học và quản lý nội dung. Student tham gia bằng mã, học flashcard, làm quiz và theo dõi tiến độ.</p></div>
-        <StudyMascot message={mode === 'login' ? 'Chào mừng bạn trở lại!' : 'Đăng ký xong là học ngay nhé!'} expression={mode === 'login' ? 'happy' : 'surprised'} />
+        <div className="auth-brand"><div className="brand-mark">VN</div><div><strong>IELTS Từ vựng</strong><span>Không gian học từ vựng mỗi ngày</span></div></div>
+        <div className="auth-copy"><span className="eyebrow">Học ngay</span><h1>{mode === 'login' ? 'Vào lại đúng hồ sơ học tập của bạn.' : 'Tạo tài khoản gọn nhẹ để bắt đầu học ngay.'}</h1><p>{mode === 'login' ? 'Dùng email và mật khẩu để quay lại đúng flow đang dở.' : 'Tài khoản mới mặc định là học viên để bạn vào học ngay, không cần thiết lập rườm rà.'}</p></div>
+        <StudyMascot message={mode === 'login' ? 'Chào mừng bạn quay lại!' : 'Tạo tài khoản xong là học ngay!'} expression={mode === 'login' ? 'happy' : 'surprised'} />
       </section>
       <section className="auth-form-wrap">
         <form className="auth-form" onSubmit={submit}>
-          <div className="auth-heading"><span>{mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}</span><h2>{mode === 'login' ? 'Tiếp tục hành trình học' : 'Bắt đầu với Vocabulary OS'}</h2></div>
-          {mode === 'register' && <label>Họ tên<input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Nguyễn Thanh Vân" required /></label>}
-          <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></label>
-          <label>Mật khẩu<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} placeholder="Tối thiểu 6 ký tự" required /></label>
-          {mode === 'register' && <div className="auth-note"><BookOpenCheck size={18} /> Tài khoản mới mặc định là Student.</div>}
+          <div className="auth-heading"><span>{mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}</span><h2>{mode === 'login' ? 'Vào học ngay' : 'Bắt đầu hành trình học từ vựng'}</h2><p>{mode === 'login' ? 'Dùng email và mật khẩu để vào lại đúng hồ sơ học tập của bạn.' : 'Tạo tài khoản gọn nhẹ. Tài khoản mới sẽ mặc định là học viên để bạn bắt đầu học ngay.'}</p></div>
+          {mode === 'register' && <div className="auth-note"><BookOpenCheck size={18} /> Tài khoản mới sẽ mặc định là học viên.</div>}
+          {mode === 'login' && <div className="auth-note"><BookOpenCheck size={18} /> Một điểm vào duy nhất để quay lại đúng tiến độ học của bạn.</div>}
+          {mode === 'register' && <label>Họ tên<input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Nguyễn Thanh Vân" autoComplete="name" required /></label>}
+          <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required /></label>
+          <label>Mật khẩu<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} placeholder="Tối thiểu 6 ký tự" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required /></label>
           {message && <div className="form-message">{message}</div>}
-          <button className="button primary full" disabled={loading}>{loading ? 'Đang xử lý...' : mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</button>
-          <button type="button" className="text-button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setMessage(''); }}>
+          <button className="button primary full auth-submit" disabled={loading}>{loading ? 'Đang xử lý...' : mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</button>
+          <button type="button" className="text-button auth-switch" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setMessage(''); }}>
             {mode === 'login' ? 'Chưa có tài khoản? Đăng ký' : 'Đã có tài khoản? Đăng nhập'}
           </button>
         </form>

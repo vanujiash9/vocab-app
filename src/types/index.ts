@@ -115,6 +115,21 @@ export interface TeacherVocabularyItem {
   updated_at: string;
 }
 
+export interface TeacherVocabularyImportRow {
+  word: string;
+  phonetic: string | null;
+  part_of_speech: string | null;
+  english_definition: string;
+  vietnamese_meaning: string;
+  difficulty: TeacherVocabularyDifficulty | null;
+}
+
+export interface TeacherVocabularyImportSummary {
+  imported: number;
+  duplicatesOrExisting: number;
+  skipped: number;
+}
+
 export interface TeacherStudent {
   id: string;
   teacher_id: string;

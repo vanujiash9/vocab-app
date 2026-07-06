@@ -301,6 +301,7 @@ create policy "assignments student select" on public.vocabulary_assignments for 
 create policy "assignments student update status" on public.vocabulary_assignments for update to authenticated using (student_id = auth.uid()) with check (student_id = auth.uid());
 
 create policy "notifications own all" on public.notifications for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "notifications teacher insert for assigned students" on public.notifications for insert to authenticated with check (actor_id = auth.uid() and public.is_teacher() and exists (select 1 from public.teacher_students ts where ts.teacher_id = auth.uid() and ts.student_id = notifications.user_id));
 
 create policy "deadlines own all" on public.deadlines for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "quiz results own all" on public.quiz_results for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());

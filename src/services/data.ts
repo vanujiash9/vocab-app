@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { normalizeOptionalText, normalizeTeacherDifficulty, normalizeWord } from '../lib/teacherVocabularyNormalization';
 import type { DictionaryEntry } from '../features/dictionary/dictionary.types';
 import type {
   AppNotification,
@@ -12,6 +13,8 @@ import type {
   StudentVocabularyItem,
   TeacherStudent,
   TeacherVocabularyDifficulty,
+  TeacherVocabularyImportRow,
+  TeacherVocabularyImportSummary,
   TeacherVocabularyItem,
   TeacherVocabularyRecord,
   VocabularyAssignment,
@@ -48,10 +51,6 @@ type JoinedAssignmentRow = {
   completed_at: string | null;
   dictionary_entries: DictionaryEntryRecord | null;
 };
-
-function normalizeWord(word: string): string {
-  return word.trim().toLowerCase();
-}
 
 function textArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
@@ -187,21 +186,40 @@ async function getUserVocabularyByEntry(userId: string, dictionaryEntryId: strin
   return data ? mapStudentVocabularyRow(data as JoinedUserVocabularyRow) : null;
 }
 
-export async function getDashboardSummary(userId: string): Promise<DashboardSummary> {
-  const [vocabulary, deadlines] = await Promise.all([
-    supabase.from('user_vocabulary').select('id,status').eq('user_id', userId),
+export async function getDashboardSummary(userId: string, role?: UserRole): Promise<DashboardSummary> {
+  if (role === 'teacher') {
+    const [vocabulary, assignments] = await Promise.all([
+      supabase.from('teacher_vocabulary').select('id').eq('teacher_id', userId),
+      supabase.from('vocabulary_assignments').select('id').eq('teacher_id', userId).neq('status', 'known'),
+    ]);
+    const error = vocabulary.error ?? assignments.error;
+    if (error) throw error;
+
+    return {
+      vocabulary: vocabulary.data?.length ?? 0,
+      known: 0,
+      difficult: 0,
+      openDeadlines: assignments.data?.length ?? 0,
+    };
+  }
+
+  const [assignments, deadlines] = await Promise.all([
+    supabase.from('vocabulary_assignments').select('id,status').eq('student_id', userId),
     supabase.from('deadlines').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('completed', false),
   ]);
-  const error = vocabulary.error ?? deadlines.error;
+  const error = assignments.error ?? deadlines.error;
   if (error) throw error;
-  const words = (vocabulary.data ?? []) as Pick<UserVocabularyRecord, 'id' | 'status'>[];
+
+  const items = (assignments.data ?? []) as Pick<VocabularyAssignment, 'id' | 'status'>[];
   return {
-    vocabulary: words.length,
-    known: words.filter((item) => item.status === 'known').length,
-    difficult: words.filter((item) => item.status === 'difficult').length,
+    vocabulary: items.length,
+    known: items.filter((item) => item.status === 'known').length,
+    difficult: items.filter((item) => item.status === 'difficult').length,
     openDeadlines: deadlines.count ?? 0,
   };
 }
+
+// ponytail: dashboard now reflects assignment-backed teacher/student workflows; add role-specific KPI cards later if teacher needs separate metrics beyond counts.
 
 export async function listCourses(): Promise<Course[]> {
   const { data, error } = await supabase.from('accessible_courses').select('*').order('created_at', { ascending: false });
@@ -351,6 +369,100 @@ export async function listTeacherVocabulary(teacherId: string): Promise<TeacherV
   return ((data ?? []) as JoinedTeacherVocabularyRow[]).map(mapTeacherVocabularyRow);
 }
 
+export async function importTeacherVocabularyFromRows(teacherId: string, rows: TeacherVocabularyImportRow[]): Promise<TeacherVocabularyImportSummary> {
+  const validRows = rows
+    .map((row) => ({
+      ...row,
+      word: row.word.trim(),
+      phonetic: normalizeOptionalText(row.phonetic),
+      part_of_speech: normalizeOptionalText(row.part_of_speech),
+      english_definition: row.english_definition.trim() || 'Imported from CSV.',
+      vietnamese_meaning: row.vietnamese_meaning.trim() || 'Cần bổ sung nghĩa tiếng Việt.',
+      difficulty: normalizeTeacherDifficulty(row.difficulty),
+    }))
+    .filter((row) => row.word);
+
+  const skipped = rows.length - validRows.length;
+  if (!validRows.length) {
+    return { imported: 0, duplicatesOrExisting: 0, skipped };
+  }
+
+  const normalizedWords = [...new Set(validRows.map((row) => normalizeWord(row.word)))];
+  const { data: existingEntries, error: existingEntriesError } = await supabase
+    .from('dictionary_entries')
+    .select('id, normalized_word')
+    .in('normalized_word', normalizedWords);
+  if (existingEntriesError) throw existingEntriesError;
+
+  const existingEntryMap = new Map((existingEntries ?? []).map((entry) => [entry.normalized_word, entry.id]));
+  const newEntryRows = validRows
+    .filter((row) => !existingEntryMap.has(normalizeWord(row.word)))
+    .map((row) => ({
+      normalized_word: normalizeWord(row.word),
+      word: row.word,
+      phonetic: row.phonetic,
+      audio_url: null,
+      part_of_speech: row.part_of_speech,
+      english_definition: row.english_definition,
+      vietnamese_meaning: row.vietnamese_meaning,
+      examples: [],
+      synonyms: [],
+      antonyms: [],
+      provider: 'import-csv',
+      raw_response: null,
+    }));
+
+  if (newEntryRows.length) {
+    const { error } = await supabase.from('dictionary_entries').upsert(newEntryRows, { onConflict: 'normalized_word' });
+    if (error) throw error;
+  }
+
+  const { data: dictionaryEntries, error: dictionaryEntriesError } = await supabase
+    .from('dictionary_entries')
+    .select('id, normalized_word')
+    .in('normalized_word', normalizedWords);
+  if (dictionaryEntriesError) throw dictionaryEntriesError;
+
+  const dictionaryEntryMap = new Map((dictionaryEntries ?? []).map((entry) => [entry.normalized_word, entry.id]));
+  const teacherRows = validRows.flatMap((row) => {
+    const dictionaryEntryId = dictionaryEntryMap.get(normalizeWord(row.word));
+    if (!dictionaryEntryId) {
+      return [];
+    }
+
+    return [{
+      teacher_id: teacherId,
+      dictionary_entry_id: dictionaryEntryId,
+      difficulty: row.difficulty,
+      note: null,
+    }];
+  });
+
+  if (!teacherRows.length) {
+    return { imported: 0, duplicatesOrExisting: validRows.length, skipped };
+  }
+
+  const { data: existingTeacherRows, error: existingTeacherRowsError } = await supabase
+    .from('teacher_vocabulary')
+    .select('dictionary_entry_id')
+    .eq('teacher_id', teacherId)
+    .in('dictionary_entry_id', teacherRows.map((row) => row.dictionary_entry_id));
+  if (existingTeacherRowsError) throw existingTeacherRowsError;
+
+  const existingTeacherIds = new Set((existingTeacherRows ?? []).map((row) => row.dictionary_entry_id));
+  const rowsToInsert = teacherRows.filter((row) => !existingTeacherIds.has(row.dictionary_entry_id));
+  if (rowsToInsert.length) {
+    const { error } = await supabase.from('teacher_vocabulary').upsert(rowsToInsert, { onConflict: 'teacher_id,dictionary_entry_id' });
+    if (error) throw error;
+  }
+
+  return {
+    imported: rowsToInsert.length,
+    duplicatesOrExisting: teacherRows.length - rowsToInsert.length,
+    skipped,
+  };
+}
+
 export async function updateTeacherVocabularyNote(id: string, note: string): Promise<void> {
   const { error } = await supabase.from('teacher_vocabulary').update({ note: note.trim() || null }).eq('id', id);
   if (error) throw error;
@@ -435,7 +547,10 @@ export async function assignVocabularyToStudents(teacherId: string, studentIds: 
     message: `Giáo viên đã giao ${dictionaryEntryIds.length} từ mới cho bạn.`,
   }));
   const { error: notificationError } = await supabase.from('notifications').insert(notifications);
-  if (notificationError) throw notificationError;
+  if (notificationError) {
+    // ponytail: notifications are best-effort here because some projects keep insert RLS tighter than assignment RLS. add a server-side rpc when notification delivery must be guaranteed.
+    console.warn('Không tạo được thông báo sau khi giao từ:', notificationError.message);
+  }
 }
 
 export async function listAssignmentsForStudent(studentId: string): Promise<VocabularyAssignment[]> {
@@ -453,10 +568,23 @@ export async function updateAssignmentStatus(id: string, status: VocabularyStatu
   if (error) throw error;
 }
 
+function mapNotification(item: AppNotification): AppNotification {
+  if (item.type !== 'vocabulary_assigned') {
+    return item;
+  }
+
+  return {
+    ...item,
+    type: 'vocabulary_assignment',
+    title: 'Bạn có từ vựng mới được giao',
+    message: item.message || 'Giáo viên vừa giao thêm từ mới cho bạn.',
+  };
+}
+
 export async function listNotifications(userId: string): Promise<AppNotification[]> {
   const { data, error } = await supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as AppNotification[];
+  return ((data ?? []) as AppNotification[]).map(mapNotification);
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
