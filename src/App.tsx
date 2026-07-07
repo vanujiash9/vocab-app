@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DeadlinesPage } from './pages/DeadlinesPage';
 import { FlashcardsPage } from './pages/FlashcardsPage';
 import { DictionarySearchPage } from './features/dictionary/DictionarySearchPage';
+import { ReadingNotesPage } from './features/readingNotes/ReadingNotesPage';
 import { ImportExcelPage } from './pages/ImportExcelPage';
 import { LibraryPage } from './pages/LibraryPage';
 import { NotificationsPage } from './pages/NotificationsPage';
@@ -29,6 +30,7 @@ export default function App() {
     <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/lookup" element={<DictionarySearchPage />} />
+      <Route path="/reading-notes" element={<ReadingNotesPage />} />
       <Route path="/library" element={<LibraryPage />} />
       <Route path="/assigned-words" element={<AssignedWordsPage />} />
       <Route path="/flashcards" element={<FlashcardsPage />} />

@@ -1,11 +1,12 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { BookOpenCheck } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { normalizeDisplayName, normalizeEmail, normalizePassword, validateAuthInput } from '../contexts/AuthContext';
 import { StudyMascot } from '../components/StudyMascot';
+import { supabase } from '../lib/supabase';
 
 export function AuthPage() {
-  const { user, signIn, signUp } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,19 +15,42 @@ export function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  if (user) return <Navigate to="/dashboard" replace />;
+  const authMeta = useMemo(() => ({
+    heading: mode === 'login' ? 'Vào học ngay' : 'Bắt đầu hành trình học từ vựng',
+    eyebrow: mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản',
+    heroHeading: mode === 'login' ? 'Vào lại đúng hồ sơ học tập của bạn.' : 'Tạo tài khoản gọn nhẹ để bắt đầu học ngay.',
+    heroBody: mode === 'login' ? 'Dùng email và mật khẩu để quay lại đúng flow đang dở.' : 'Tài khoản mới mặc định là học viên để bạn vào học ngay, không cần thiết lập rườm rà.',
+    note: mode === 'login' ? 'Một điểm vào duy nhất để quay lại đúng tiến độ học của bạn.' : 'Tài khoản mới sẽ mặc định là học viên.',
+    mascotMessage: mode === 'login' ? 'Chào mừng bạn quay lại!' : 'Tạo tài khoản xong là học ngay!',
+    mascotExpression: mode === 'login' ? 'happy' : 'surprised',
+  }), [mode]);
+
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setMessage('');
     try {
+      const normalizedEmail = normalizeEmail(email);
+      const normalizedPassword = normalizePassword(password);
+      const normalizedDisplayName = normalizeDisplayName(displayName);
+
+      validateAuthInput(mode, normalizedEmail, normalizedPassword, normalizedDisplayName);
+
       if (mode === 'login') {
-        await signIn(email, password);
+        const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password: normalizedPassword });
+        if (error) throw error;
+        setIsAuthenticated(true);
         navigate('/dashboard');
       } else {
-        const result = await signUp({ email, password, displayName });
-        setMessage(result);
+        const { error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password: normalizedPassword,
+          options: { data: { display_name: normalizedDisplayName } },
+        });
+        if (error) throw error;
+        setMessage('Đăng ký thành công. Bạn có thể đăng nhập ngay.');
         setMode('login');
       }
     } catch (error) {

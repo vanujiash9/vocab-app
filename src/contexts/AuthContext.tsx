@@ -22,6 +22,80 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function normalizeAuthError(error: { message?: string } | null): Error | null {
+  if (!error?.message) {
+    return null;
+  }
+
+  const message = error.message.toLowerCase();
+
+  if (message.includes('invalid login credentials')) {
+    return new Error('Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.');
+  }
+
+  if (message.includes('email not confirmed')) {
+    return new Error('Email của bạn chưa được xác nhận. Vui lòng kiểm tra hộp thư rồi thử lại.');
+  }
+
+  if (message.includes('user already registered') || message.includes('already been registered')) {
+    return new Error('Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.');
+  }
+
+  if (message.includes('password should be at least')) {
+    return new Error('Mật khẩu cần có ít nhất 6 ký tự.');
+  }
+
+  if (message.includes('unable to validate email address') || message.includes('invalid email')) {
+    return new Error('Email không hợp lệ. Vui lòng nhập đúng định dạng email.');
+  }
+
+  return new Error(error.message);
+}
+
+function throwNormalizedAuthError(error: { message?: string } | null): void {
+  const normalized = normalizeAuthError(error);
+  if (normalized) {
+    throw normalized;
+  }
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function normalizeDisplayName(displayName: string): string {
+  return displayName.trim();
+}
+
+function normalizePassword(password: string): string {
+  return password.trim();
+}
+
+function validateAuthInput(mode: 'login' | 'register', email: string, password: string, displayName?: string): void {
+  if (!email) {
+    throw new Error('Vui lòng nhập email.');
+  }
+
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!isEmailValid) {
+    throw new Error('Email không hợp lệ. Vui lòng nhập đúng định dạng email.');
+  }
+
+  if (!password) {
+    throw new Error('Vui lòng nhập mật khẩu.');
+  }
+
+  if (password.length < 6) {
+    throw new Error('Mật khẩu cần có ít nhất 6 ký tự.');
+  }
+
+  if (mode === 'register' && !displayName) {
+    throw new Error('Vui lòng nhập họ tên để tạo tài khoản.');
+  }
+}
+
+export { normalizeDisplayName, normalizeEmail, normalizePassword, validateAuthInput };
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -34,7 +108,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
+    let alive = true;
+
+    const initializeSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!alive) return;
+
       try {
         setSession(data.session);
         if (data.session?.user) {
@@ -45,11 +124,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         setProfile(null);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
-    });
+    };
+
+    void initializeSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      if (!alive) return;
+
       try {
         setSession(nextSession);
         if (nextSession?.user) {
@@ -60,11 +143,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         setProfile(null);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      alive = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -73,16 +159,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     loading,
     signIn: async (email, password) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      const normalizedEmail = normalizeEmail(email);
+      const normalizedPassword = normalizePassword(password);
+      validateAuthInput('login', normalizedEmail, normalizedPassword);
+      const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password: normalizedPassword });
+      throwNormalizedAuthError(error);
     },
     signUp: async ({ email, password, displayName }) => {
+      const normalizedEmail = normalizeEmail(email);
+      const normalizedPassword = normalizePassword(password);
+      const normalizedDisplayName = normalizeDisplayName(displayName);
+      validateAuthInput('register', normalizedEmail, normalizedPassword, normalizedDisplayName);
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: displayName } },
+        email: normalizedEmail,
+        password: normalizedPassword,
+        options: { data: { display_name: normalizedDisplayName } },
       });
-      if (error) throw error;
+      throwNormalizedAuthError(error);
       return data.session ? 'Đăng ký thành công.' : 'Đăng ký thành công. Bạn có thể đăng nhập sau khi Supabase hoàn tất tạo tài khoản.';
     },
     signOut: async () => {

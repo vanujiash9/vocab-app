@@ -587,6 +587,16 @@ export async function listNotifications(userId: string): Promise<AppNotification
   return ((data ?? []) as AppNotification[]).map(mapNotification);
 }
 
+export async function countUnreadNotifications(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .is('read_at', null);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function markNotificationRead(id: string): Promise<void> {
   const { error } = await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;

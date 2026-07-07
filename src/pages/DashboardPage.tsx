@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CalendarClock, CheckCircle2, LibraryBig, TriangleAlert } from 'lucide-react';
+import { BookOpen, CalendarClock, CheckCircle2, ClipboardCheck, LibraryBig, Search, Send, TriangleAlert, Upload, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 import { StudyMascot } from '../components/StudyMascot';
@@ -7,22 +7,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { getDashboardSummary, listDeadlines } from '../services/data';
 import type { DashboardSummary, Deadline } from '../types';
 
-function getHeroCopy(role?: string) {
-  if (role === 'teacher') {
-    return {
-      eyebrow: 'Teacher workspace',
-      heading: 'Giữ lớp học rõ, gọn và sẵn để tiếp tục giao bài.',
-      description: 'Nhìn nhanh học viên, kho từ và các việc đang mở trong cùng một workspace.',
-      message: 'Hôm nay lớp cần gì?',
-    };
-  }
-
+function getHeroCopy() {
   return {
-    eyebrow: 'Vocabulary workspace',
+    eyebrow: 'Workspace',
     heading: 'Biết ngay nên học gì tiếp theo.',
     description: 'Bắt đầu từ danh sách được giao rồi chuyển nhanh sang tra cứu hoặc ôn tập.',
     message: 'Hôm nay mình học gì?',
   };
+}
+
+function getPageDescription(role?: string) {
+  return role === 'teacher'
+    ? 'Theo dõi lớp học trong một nhịp làm việc gọn và dễ quét.'
+    : 'Theo dõi từ vựng trong một workspace gọn và dễ quay lại.';
 }
 
 function getDeadlineDescription(role?: string) {
@@ -47,34 +44,68 @@ function getDeadlineEmpty(role?: string) {
     };
 }
 
-function getPageDescription(role?: string) {
-  return role === 'teacher'
-    ? 'Theo dõi lớp học trong một nhịp làm việc gọn và dễ quét.'
-    : 'Theo dõi từ vựng trong một workspace gọn và dễ quay lại.';
-}
-
 function Progress({ label, value }: { label: string; value: number }) {
   return <div className="progress-row"><div><span>{label}</span><b>{Math.round(value)}%</b></div><div className="progress-track"><i style={{ width: `${Math.min(100, value)}%` }} /></div></div>;
 }
 
-function DashboardHero({ role }: { role?: string }) {
-  const heroCopy = getHeroCopy(role);
+function DashboardHero() {
+  const heroCopy = getHeroCopy();
   return <section className="hero-card"><div className="hero-copy"><span className="eyebrow">{heroCopy.eyebrow}</span><h2>{heroCopy.heading}</h2><p>{heroCopy.description}</p></div><StudyMascot message={heroCopy.message} expression="happy" /></section>;
 }
 
-function DashboardStats({ summary }: { summary: DashboardSummary }) {
-  const stats = [
-    ['Từ vựng', summary.vocabulary, LibraryBig],
-    ['Đã thuộc', summary.known, CheckCircle2],
-    ['Khó nhớ', summary.difficult, TriangleAlert],
-    ['Deadline mở', summary.openDeadlines, CalendarClock],
-  ] as const;
+function DashboardStats({ summary, role }: { summary: DashboardSummary; role?: string }) {
+  const stats = role === 'teacher'
+    ? [
+      ['Kho từ', summary.vocabulary, LibraryBig],
+      ['Đã sẵn sàng', summary.known, CheckCircle2],
+      ['Cần chú ý', summary.difficult, TriangleAlert],
+      ['Việc mở', summary.openDeadlines, CalendarClock],
+    ] as const
+    : [
+      ['Từ vựng', summary.vocabulary, LibraryBig],
+      ['Đã thuộc', summary.known, CheckCircle2],
+      ['Khó nhớ', summary.difficult, TriangleAlert],
+      ['Deadline mở', summary.openDeadlines, CalendarClock],
+    ] as const;
 
   return <section className="stats-grid">{stats.map(([label, value, Icon]) => <article className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><strong>{value}</strong><span>{label}</span></article>)}</section>;
 }
 
-function VocabularyProgressPanel({ summary }: { summary: DashboardSummary }) {
-  return <article className="panel"><div className="panel-heading"><div><h3>Tiến độ từ vựng</h3><p>Phân loại nhanh thư viện hiện tại.</p></div></div><div className="progress-stack"><Progress label="Đã thuộc" value={summary.vocabulary ? summary.known / summary.vocabulary * 100 : 0} /><Progress label="Khó nhớ" value={summary.vocabulary ? summary.difficult / summary.vocabulary * 100 : 0} /><Progress label="Từ mới" value={summary.vocabulary ? (summary.vocabulary - summary.known - summary.difficult) / summary.vocabulary * 100 : 0} /></div></article>;
+function VocabularyProgressPanel({ summary, role }: { summary: DashboardSummary; role?: string }) {
+  const title = role === 'teacher' ? 'Mức sẵn sàng của kho từ' : 'Tiến độ từ vựng';
+  const description = role === 'teacher' ? 'Quét nhanh nhóm từ có thể giao tiếp và nhóm cần xử lý thêm.' : 'Phân loại nhanh thư viện hiện tại.';
+
+  return <article className="panel"><div className="panel-heading"><div><h3>{title}</h3><p>{description}</p></div></div><div className="progress-stack"><Progress label="Đã thuộc" value={summary.vocabulary ? summary.known / summary.vocabulary * 100 : 0} /><Progress label="Khó nhớ" value={summary.vocabulary ? summary.difficult / summary.vocabulary * 100 : 0} /><Progress label="Từ mới" value={summary.vocabulary ? (summary.vocabulary - summary.known - summary.difficult) / summary.vocabulary * 100 : 0} /></div></article>;
+}
+
+function DashboardActionGrid({ role }: { role?: string }) {
+  const navigate = useNavigate();
+  const actions = role === 'teacher'
+    ? [
+      { title: 'Quản lý học viên', description: 'Mở danh sách lớp và cập nhật người nhận.', to: '/students', icon: Users },
+      { title: 'Giao từ ngay', description: 'Chọn nhóm học viên rồi gửi một đợt giao mới.', to: '/assign-words', icon: Upload },
+      { title: 'Nhập CSV', description: 'Bổ sung từ hàng loạt vào kho giáo viên.', to: '/import-excel', icon: Send },
+    ]
+    : [
+      { title: 'Xem từ được giao', description: 'Tiếp tục từ những từ đang chờ xử lý.', to: '/assigned-words', icon: Send },
+      { title: 'Ôn bằng flashcard', description: 'Lật thẻ nhanh để giữ nhịp ghi nhớ.', to: '/flashcards', icon: BookOpen },
+      { title: 'Làm quiz', description: 'Kiểm tra nhanh mức ghi nhớ hiện tại.', to: '/quiz', icon: ClipboardCheck },
+      { title: 'Tra cứu thêm', description: 'Mở tra cứu và lưu thêm từ mới vào thư viện.', to: '/lookup', icon: Search },
+    ];
+
+  return <section className="dashboard-action-grid">{actions.map(({ title, description, to, icon: Icon }) => <button key={to} type="button" className="dashboard-action-card" onClick={() => navigate(to)}><div className="stat-icon dashboard-action-icon"><Icon size={18} /></div><strong>{title}</strong><p>{description}</p></button>)}</section>;
+}
+
+function DashboardPanels({ summary, deadlines, role }: { summary: DashboardSummary; deadlines: Deadline[]; role?: string }) {
+  return <section className="dashboard-grid"><VocabularyProgressPanel summary={summary} role={role} /><DeadlinePanelCard deadlines={deadlines} role={role} /></section>;
+}
+
+function DashboardSections({ summary, deadlines, role }: { summary: DashboardSummary; deadlines: Deadline[]; role?: string }) {
+  if (role === 'teacher') {
+    return <><DashboardActionGrid role={role} /><DashboardStats summary={summary} role={role} /><DashboardPanels summary={summary} deadlines={deadlines} role={role} /></>;
+  }
+
+  return <><DashboardStats summary={summary} role={role} /><DashboardActionGrid role={role} /><DashboardPanels summary={summary} deadlines={deadlines} role={role} /></>;
 }
 
 function DeadlinePanel({ deadlines, role }: { deadlines: Deadline[]; role?: string }) {
@@ -92,12 +123,11 @@ function DeadlinePanelCard({ deadlines, role }: { deadlines: Deadline[]; role?: 
   return <article className="panel"><div className="panel-heading"><div><h3>Việc nên xử lý tiếp theo</h3><p>{getDeadlineDescription(role)}</p></div></div><DeadlinePanel deadlines={deadlines} role={role} /></article>;
 }
 
-function DashboardPanels({ summary, deadlines, role }: { summary: DashboardSummary; deadlines: Deadline[]; role?: string }) {
-  return <section className="dashboard-grid"><VocabularyProgressPanel summary={summary} /><DeadlinePanelCard deadlines={deadlines} role={role} /></section>;
-}
-
 function DashboardContent({ summary, deadlines, role, displayName }: { summary: DashboardSummary; deadlines: Deadline[]; role?: string; displayName?: string }) {
-  return <div className="page-wrap"><div className="page-heading"><div><h1>Xin chào, {displayName}</h1><p>{getPageDescription(role)}</p></div></div><DashboardHero role={role} /><DashboardStats summary={summary} /><DashboardPanels summary={summary} deadlines={deadlines} role={role} /></div>;
+  const pageClassName = role === 'teacher' ? 'page-wrap teacher-dashboard-page dashboard-page' : 'page-wrap dashboard-page';
+  const headingClassName = role === 'teacher' ? 'page-heading teacher-dashboard-heading' : 'page-heading';
+
+  return <div className={pageClassName}><div className={headingClassName}><div><h1>Xin chào, {displayName}</h1><p>{getPageDescription(role)}</p></div></div><DashboardHero /><DashboardSections summary={summary} deadlines={deadlines} role={role} /></div>;
 }
 
 export function DashboardPage() {

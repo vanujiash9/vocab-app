@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell, BookOpen, CalendarDays, ClipboardCheck, FileSpreadsheet, Home, Library, LogOut, Menu, Search, Send, Settings, Upload, Users, X } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { countUnreadNotifications } from '../services/data';
 
 interface NavItem {
   to: string;
@@ -16,44 +17,36 @@ interface NavSection {
 
 const studentSections: NavSection[] = [
   {
-    title: 'Học mỗi ngày',
+    title: '',
     items: [
       { to: '/dashboard', label: 'Dashboard', icon: Home },
       { to: '/lookup', label: 'Tra cứu từ', icon: Search },
+      { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookOpen },
       { to: '/library', label: 'Thư viện từ', icon: Library },
       { to: '/assigned-words', label: 'Từ được giao', icon: Send },
-    ],
-  },
-  {
-    title: 'Luyện tập',
-    items: [
       { to: '/flashcards', label: 'Flashcard', icon: BookOpen },
       { to: '/quiz', label: 'Quiz', icon: ClipboardCheck },
       { to: '/deadlines', label: 'Deadline', icon: CalendarDays },
-      { to: '/notifications', label: 'Thông báo', icon: Bell },
     ],
   },
 ];
 
 const teacherSections: NavSection[] = [
   {
-    title: 'Điều phối lớp học',
+    title: '',
     items: [
       { to: '/dashboard', label: 'Dashboard', icon: Home },
       { to: '/students', label: 'Học viên', icon: Users },
       { to: '/assign-words', label: 'Giao từ', icon: Upload },
-      { to: '/notifications', label: 'Thông báo', icon: Bell },
-    ],
-  },
-  {
-    title: 'Tài nguyên',
-    items: [
       { to: '/lookup', label: 'Tra cứu từ', icon: Search },
+      { to: '/reading-notes', label: 'Đọc & Ghi chú từ', icon: BookOpen },
       { to: '/library', label: 'Kho từ vựng', icon: Library },
       { to: '/import-excel', label: 'Nhập CSV', icon: FileSpreadsheet },
     ],
   },
 ];
+
+
 
 const pageMeta: Record<string, { title: string; description: string }> = {
   '/dashboard': {
@@ -63,6 +56,10 @@ const pageMeta: Record<string, { title: string; description: string }> = {
   '/lookup': {
     title: 'Tra cứu từ mới',
     description: 'Tra cứu và lưu từ mới.',
+  },
+  '/reading-notes': {
+    title: 'Đọc & Ghi chú từ',
+    description: 'Dịch nghĩa theo ngữ cảnh bằng AI.',
   },
   '/library': {
     title: 'Thư viện từ vựng',
@@ -111,12 +108,41 @@ const pageMeta: Record<string, { title: string; description: string }> = {
 };
 
 export function Layout() {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    const loadUnreadNotifications = async () => {
+      if (!user) {
+        setUnreadNotifications(0);
+        return;
+      }
+
+      try {
+        setUnreadNotifications(await countUnreadNotifications(user.id));
+      } catch {
+        setUnreadNotifications(0);
+      }
+    };
+
+    void loadUnreadNotifications();
+  }, [user, location.pathname]);
+
   const sections = profile?.role === 'teacher' ? teacherSections : studentSections;
+  const hasUnreadNotifications = unreadNotifications > 0;
+  const unreadNotificationLabel = unreadNotifications > 9 ? '9+' : `${unreadNotifications}`;
+
+  const renderNavLabel = (to: string, label: string) => {
+    if (to !== '/notifications' || !hasUnreadNotifications) {
+      return <span>{label}</span>;
+    }
+
+    return <span className="nav-label-with-badge"><span>{label}</span><span className="notification-badge" aria-label={`${unreadNotifications} thông báo chưa đọc`}>{unreadNotificationLabel}</span></span>;
+  };
+
   const activeMeta = pageMeta[location.pathname] ?? {
     title: 'Vocabulary OS',
     description: 'Giữ nhịp học rõ ràng.',
@@ -132,16 +158,16 @@ export function Layout() {
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="brand-row">
           <div className="brand-mark">VO</div>
-          <div>
+          <div className="brand-copy">
             <strong>Vocabulary OS</strong>
-            <span>Học từ vựng</span>
+            <span>Học từ vựng mỗi ngày</span>
           </div>
           <button className="mobile-close" onClick={() => setOpen(false)} aria-label="Đóng menu"><X size={20} /></button>
         </div>
 
         {sections.map((section) => (
-          <div key={section.title}>
-            <p className="nav-caption">{section.title}</p>
+          <div key={section.items[0]?.to ?? section.title}>
+            {section.title ? <p className="nav-caption">{section.title}</p> : null}
             <nav className="sidebar-nav">
               {section.items.map(({ to, label, icon: Icon }) => (
                 <NavLink
@@ -151,7 +177,7 @@ export function Layout() {
                   className={({ isActive }) => isActive || location.pathname.startsWith(`${to}/`) ? 'active' : ''}
                 >
                   <Icon size={19} />
-                  <span>{label}</span>
+                  {renderNavLabel(to, label)}
                 </NavLink>
               ))}
             </nav>
@@ -166,19 +192,21 @@ export function Layout() {
             <strong>{profile?.display_name || 'Người dùng'}</strong>
             <span>{profile?.email}</span>
           </Link>
-          <Link className="icon-button" to="/settings" onClick={() => setOpen(false)} aria-label="Cài đặt"><Settings size={18} /></Link>
-          <button className="icon-button" onClick={() => void logout()} aria-label="Đăng xuất"><LogOut size={18} /></button>
+          <button className="settings-button" onClick={() => void logout()} aria-label="Đăng xuất">
+            <Settings size={18} />
+            <span>Đăng xuất</span>
+          </button>
         </div>
       </aside>
 
       <main className="main-area">
         <header className="mobile-topbar">
-          <button className="icon-button" onClick={() => setOpen(true)} aria-label="Mở menu"><Menu size={21} /></button>
+          <button className="icon-button mobile-menu-button" onClick={() => setOpen(true)} aria-label="Mở menu">
+            <Menu size={21} />
+          </button>
           <div>
             <strong>{activeMeta.title}</strong>
-            <p className="muted">{profile?.role === 'teacher' ? 'Không gian giáo viên' : 'Không gian học từ vựng'}</p>
           </div>
-          <span className="role-pill mini">{profile?.role === 'teacher' ? 'Giáo viên' : 'Học viên'}</span>
         </header>
         <Outlet />
       </main>
