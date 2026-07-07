@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 4176",
+    "dev": "vite --host 0.0.0.0 --port 4180",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4175",
     "test:unit": "vitest run",
