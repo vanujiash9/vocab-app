@@ -17,10 +17,10 @@ import type {
   TeacherVocabularyImportSummary,
   TeacherVocabularyItem,
   TeacherVocabularyRecord,
-  VocabularyAssignment,
   UserRole,
   UserVocabularyRecord,
   Vocabulary,
+  VocabularyAssignment,
   VocabularyStatus,
 } from '../types';
 
@@ -184,6 +184,15 @@ async function getUserVocabularyByEntry(userId: string, dictionaryEntryId: strin
     .maybeSingle();
   if (error) throw error;
   return data ? mapStudentVocabularyRow(data as JoinedUserVocabularyRow) : null;
+}
+
+export async function addAssignedWordToLibrary(userId: string, dictionaryEntryId: string): Promise<{ status: 'saved' | 'duplicate' }> {
+  const existing = await getUserVocabularyByEntry(userId, dictionaryEntryId);
+  if (existing) return { status: 'duplicate' };
+
+  const { error } = await supabase.from('user_vocabulary').insert({ user_id: userId, dictionary_entry_id: dictionaryEntryId, status: 'new' });
+  if (error) throw error;
+  return { status: 'saved' };
 }
 
 export async function getDashboardSummary(userId: string, role?: UserRole): Promise<DashboardSummary> {
@@ -369,7 +378,9 @@ export async function listTeacherVocabulary(teacherId: string): Promise<TeacherV
   return ((data ?? []) as JoinedTeacherVocabularyRow[]).map(mapTeacherVocabularyRow);
 }
 
-export async function importTeacherVocabularyFromRows(teacherId: string, rows: TeacherVocabularyImportRow[]): Promise<TeacherVocabularyImportSummary> {
+type ImportedVocabularyRow = TeacherVocabularyImportRow & { normalized_word: string };
+
+function normalizeImportedVocabularyRows(rows: TeacherVocabularyImportRow[]): { validRows: ImportedVocabularyRow[]; skipped: number } {
   const validRows = rows
     .map((row) => ({
       ...row,
@@ -379,15 +390,18 @@ export async function importTeacherVocabularyFromRows(teacherId: string, rows: T
       english_definition: row.english_definition.trim() || 'Imported from CSV.',
       vietnamese_meaning: row.vietnamese_meaning.trim() || 'Cần bổ sung nghĩa tiếng Việt.',
       difficulty: normalizeTeacherDifficulty(row.difficulty),
+      normalized_word: normalizeWord(row.word),
     }))
     .filter((row) => row.word);
 
-  const skipped = rows.length - validRows.length;
-  if (!validRows.length) {
-    return { imported: 0, duplicatesOrExisting: 0, skipped };
-  }
+  return {
+    validRows,
+    skipped: rows.length - validRows.length,
+  };
+}
 
-  const normalizedWords = [...new Set(validRows.map((row) => normalizeWord(row.word)))];
+async function ensureDictionaryEntries(rows: ImportedVocabularyRow[]): Promise<Map<string, string>> {
+  const normalizedWords = [...new Set(rows.map((row) => row.normalized_word))];
   const { data: existingEntries, error: existingEntriesError } = await supabase
     .from('dictionary_entries')
     .select('id, normalized_word')
@@ -395,10 +409,10 @@ export async function importTeacherVocabularyFromRows(teacherId: string, rows: T
   if (existingEntriesError) throw existingEntriesError;
 
   const existingEntryMap = new Map((existingEntries ?? []).map((entry) => [entry.normalized_word, entry.id]));
-  const newEntryRows = validRows
-    .filter((row) => !existingEntryMap.has(normalizeWord(row.word)))
+  const newEntryRows = rows
+    .filter((row) => !existingEntryMap.has(row.normalized_word))
     .map((row) => ({
-      normalized_word: normalizeWord(row.word),
+      normalized_word: row.normalized_word,
       word: row.word,
       phonetic: row.phonetic,
       audio_url: null,
@@ -423,24 +437,21 @@ export async function importTeacherVocabularyFromRows(teacherId: string, rows: T
     .in('normalized_word', normalizedWords);
   if (dictionaryEntriesError) throw dictionaryEntriesError;
 
-  const dictionaryEntryMap = new Map((dictionaryEntries ?? []).map((entry) => [entry.normalized_word, entry.id]));
-  const teacherRows = validRows.flatMap((row) => {
-    const dictionaryEntryId = dictionaryEntryMap.get(normalizeWord(row.word));
-    if (!dictionaryEntryId) {
-      return [];
-    }
+  return new Map((dictionaryEntries ?? []).map((entry) => [entry.normalized_word, entry.id]));
+}
 
-    return [{
-      teacher_id: teacherId,
-      dictionary_entry_id: dictionaryEntryId,
-      difficulty: row.difficulty,
-      note: null,
-    }];
+async function importVocabularyRowsToTeacherStore(teacherId: string, rows: TeacherVocabularyImportRow[]): Promise<TeacherVocabularyImportSummary> {
+  const { validRows, skipped } = normalizeImportedVocabularyRows(rows);
+  if (!validRows.length) return { imported: 0, duplicatesOrExisting: 0, skipped };
+
+  const dictionaryEntryMap = await ensureDictionaryEntries(validRows);
+  const teacherRows = validRows.flatMap((row) => {
+    const dictionaryEntryId = dictionaryEntryMap.get(row.normalized_word);
+    if (!dictionaryEntryId) return [];
+    return [{ teacher_id: teacherId, dictionary_entry_id: dictionaryEntryId, difficulty: row.difficulty, note: null }];
   });
 
-  if (!teacherRows.length) {
-    return { imported: 0, duplicatesOrExisting: validRows.length, skipped };
-  }
+  if (!teacherRows.length) return { imported: 0, duplicatesOrExisting: validRows.length, skipped };
 
   const { data: existingTeacherRows, error: existingTeacherRowsError } = await supabase
     .from('teacher_vocabulary')
@@ -456,11 +467,45 @@ export async function importTeacherVocabularyFromRows(teacherId: string, rows: T
     if (error) throw error;
   }
 
-  return {
-    imported: rowsToInsert.length,
-    duplicatesOrExisting: teacherRows.length - rowsToInsert.length,
-    skipped,
-  };
+  return { imported: rowsToInsert.length, duplicatesOrExisting: teacherRows.length - rowsToInsert.length, skipped };
+}
+
+async function importVocabularyRowsToStudentLibrary(studentId: string, rows: TeacherVocabularyImportRow[]): Promise<TeacherVocabularyImportSummary> {
+  const { validRows, skipped } = normalizeImportedVocabularyRows(rows);
+  if (!validRows.length) return { imported: 0, duplicatesOrExisting: 0, skipped };
+
+  const dictionaryEntryMap = await ensureDictionaryEntries(validRows);
+  const studentRows = validRows.flatMap((row) => {
+    const dictionaryEntryId = dictionaryEntryMap.get(row.normalized_word);
+    if (!dictionaryEntryId) return [];
+    return [{ user_id: studentId, dictionary_entry_id: dictionaryEntryId, status: 'new' as VocabularyStatus }];
+  });
+
+  if (!studentRows.length) return { imported: 0, duplicatesOrExisting: validRows.length, skipped };
+
+  const { data: existingStudentRows, error: existingStudentRowsError } = await supabase
+    .from('user_vocabulary')
+    .select('dictionary_entry_id')
+    .eq('user_id', studentId)
+    .in('dictionary_entry_id', studentRows.map((row) => row.dictionary_entry_id));
+  if (existingStudentRowsError) throw existingStudentRowsError;
+
+  const existingStudentIds = new Set((existingStudentRows ?? []).map((row) => row.dictionary_entry_id));
+  const rowsToInsert = studentRows.filter((row) => !existingStudentIds.has(row.dictionary_entry_id));
+  if (rowsToInsert.length) {
+    const { error } = await supabase.from('user_vocabulary').upsert(rowsToInsert, { onConflict: 'user_id,dictionary_entry_id' });
+    if (error) throw error;
+  }
+
+  return { imported: rowsToInsert.length, duplicatesOrExisting: studentRows.length - rowsToInsert.length, skipped };
+}
+
+export async function importTeacherVocabularyFromRows(teacherId: string, rows: TeacherVocabularyImportRow[]): Promise<TeacherVocabularyImportSummary> {
+  return importVocabularyRowsToTeacherStore(teacherId, rows);
+}
+
+export async function importStudentVocabularyFromRows(studentId: string, rows: TeacherVocabularyImportRow[]): Promise<TeacherVocabularyImportSummary> {
+  return importVocabularyRowsToStudentLibrary(studentId, rows);
 }
 
 export async function updateTeacherVocabularyNote(id: string, note: string): Promise<void> {

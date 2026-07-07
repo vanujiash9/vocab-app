@@ -6168,7 +6168,7 @@ th {
 
 .reading-notes-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.85fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(380px, 0.95fr);
   gap: var(--mobile-space-section);
   align-items: start;
 }
@@ -6310,7 +6310,7 @@ th {
 }
 
 .reading-text-viewer {
-  max-width: 78ch;
+  max-width: 100%;
   margin-top: 22px;
   color: var(--text-body);
   font-size: 15px;

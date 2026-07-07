@@ -115,7 +115,7 @@ export interface TeacherVocabularyItem {
   updated_at: string;
 }
 
-export interface TeacherVocabularyImportRow {
+export interface VocabularyImportRow {
   word: string;
   phonetic: string | null;
   part_of_speech: string | null;
@@ -123,6 +123,9 @@ export interface TeacherVocabularyImportRow {
   vietnamese_meaning: string;
   difficulty: TeacherVocabularyDifficulty | null;
 }
+
+export type TeacherVocabularyImportRow = VocabularyImportRow;
+export type StudentVocabularyImportRow = VocabularyImportRow;
 
 export interface TeacherVocabularyImportSummary {
   imported: number;

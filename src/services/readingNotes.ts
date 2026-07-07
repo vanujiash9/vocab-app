@@ -2,7 +2,7 @@ import type { DictionaryEntry } from '../features/dictionary/dictionary.types';
 import type { AnalyzeSelectedWordParams, AnalyzeSelectedWordResult } from '../features/readingNotes/readingNotes.types';
 import { saveDictionaryVocabulary } from './data';
 
-const GATEWAY_API_BASE_URL = (import.meta.env.VITE_GATEWAY_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+const GATEWAY_API_BASE_URL = (import.meta.env.VITE_GATEWAY_API_BASE_URL as string | undefined)?.replace(/\/$/, '') || '/api';
 const ANALYSIS_MODEL = import.meta.env.VITE_GATEWAY_MODEL as string | undefined;
 
 interface GatewayChatResponse {
@@ -140,7 +140,7 @@ function toDictionaryEntry(result: AnalyzeSelectedWordResult): DictionaryEntry {
 export async function analyzeSelectedWord(params: AnalyzeSelectedWordParams): Promise<AnalyzeSelectedWordResult> {
   let response: Response;
   try {
-    response = await fetch(`${GATEWAY_API_BASE_URL}/api/chat`, {
+    response = await fetch(`${GATEWAY_API_BASE_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -153,7 +153,7 @@ export async function analyzeSelectedWord(params: AnalyzeSelectedWordParams): Pr
       }),
     });
   } catch {
-    throw new Error(`Không kết nối được Gateway AI (${GATEWAY_API_BASE_URL || '/api'}). Hãy chạy FastAPI gateway trước.`);
+    throw new Error(`Không kết nối được Gateway AI (${GATEWAY_API_BASE_URL}). Hãy chạy FastAPI gateway trước.`);
   }
 
   if (!response.ok) {

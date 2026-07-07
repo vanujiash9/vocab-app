@@ -1,3 +1,29 @@
+do $$
+begin
+  create type public.vocabulary_status as enum ('new', 'learning', 'known', 'difficult');
+exception
+  when duplicate_object then null;
+end $$;
+
+create table if not exists public.profiles (
+  id uuid primary key,
+  email text not null default '',
+  display_name text not null default 'Người dùng',
+  role text not null default 'student',
+  daily_goal integer not null default 20,
+  reminder_enabled boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.lessons (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid,
+  title text not null default '',
+  description text not null default '',
+  position integer not null default 1,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.dictionary_entries (
   id uuid primary key default gen_random_uuid(),
   normalized_word text not null unique,
@@ -40,52 +66,8 @@ create table if not exists public.teacher_vocabulary (
   unique(teacher_id, dictionary_entry_id)
 );
 
-insert into public.dictionary_entries (
-  normalized_word,
-  word,
-  phonetic,
-  part_of_speech,
-  english_definition,
-  vietnamese_meaning,
-  examples,
-  provider,
-  created_at
-)
-select distinct on (lower(trim(word)))
-  lower(trim(word)) as normalized_word,
-  lower(trim(word)) as word,
-  phonetic,
-  part_of_speech,
-  english_definition,
-  vietnamese_meaning,
-  case when example_sentence is null or trim(example_sentence) = '' then '[]'::jsonb else jsonb_build_array(example_sentence) end as examples,
-  'legacy-vocabulary' as provider,
-  created_at
-from public.vocabulary
-where trim(word) <> ''
-order by lower(trim(word)), created_at asc
-on conflict (normalized_word) do nothing;
-
-insert into public.user_vocabulary (
-  user_id,
-  dictionary_entry_id,
-  lesson_id,
-  status,
-  lookup_count,
-  created_at
-)
-select
-  v.user_id,
-  d.id,
-  v.lesson_id,
-  v.status,
-  v.lookup_count,
-  v.created_at
-from public.vocabulary v
-join public.dictionary_entries d on d.normalized_word = lower(trim(v.word))
-where trim(v.word) <> ''
-on conflict (user_id, dictionary_entry_id) do nothing;
-
+alter table public.profiles enable row level security;
+alter table public.lessons enable row level security;
 alter table public.dictionary_entries enable row level security;
 alter table public.user_vocabulary enable row level security;
 alter table public.teacher_vocabulary enable row level security;

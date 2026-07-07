@@ -1,4 +1,4 @@
-import type { TeacherVocabularyImportRow } from '../types';
+import type { TeacherVocabularyImportRow, VocabularyImportRow } from '../types';
 import { normalizeOptionalText, normalizeTeacherDifficulty, normalizeWord } from './teacherVocabularyNormalization';
 
 const COLUMN_ALIASES = {
@@ -94,7 +94,7 @@ export function parseTeacherVocabularyCsv(fileName: string, source: string): Tea
   const difficultyIndex = getColumnIndex(headers, COLUMN_ALIASES.difficulty);
 
   const rows = lines.slice(1).map(splitCsvLine);
-  const validRows: TeacherVocabularyImportRow[] = [];
+  const validRows: VocabularyImportRow[] = [];
   let skippedRows = 0;
 
   rows.forEach((columns) => {

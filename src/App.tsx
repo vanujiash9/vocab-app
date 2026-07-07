@@ -38,7 +38,7 @@ export default function App() {
       <Route path="/deadlines" element={<DeadlinesPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/assign-words" element={<TeacherOnly><AssignWordsPage /></TeacherOnly>} />
-      <Route path="/import-excel" element={<TeacherOnly><ImportExcelPage /></TeacherOnly>} />
+      <Route path="/import-excel" element={<ImportExcelPage />} />
       <Route path="/students" element={<TeacherOnly><StudentsPage /></TeacherOnly>} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/settings" element={<SettingsPage />} />
