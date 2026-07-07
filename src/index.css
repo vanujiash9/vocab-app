@@ -843,6 +843,32 @@ a {
   background: rgba(255, 255, 255, 0.45);
 }
 
+.notification-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mobile-notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  box-shadow: 0 8px 16px rgba(220, 38, 38, 0.28);
+}
+
+.mobile-notifications-button {
+  position: relative;
+}
+
 .nav-caption {
   margin: 4px 12px 6px;
   font-size: 11px;
